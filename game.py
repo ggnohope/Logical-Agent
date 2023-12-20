@@ -4,7 +4,7 @@ import sys
 import pygame
 
 from agent import *
-from constants import *
+from const import *
 from map import Map
 from notfication import Notification
 from buttons import *

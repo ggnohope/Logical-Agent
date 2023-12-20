@@ -1,6 +1,6 @@
 import pygame
 pygame.init()
-from constants import *
+from const import *
 
 FONT = 'Arial Black'
 class Buttons():

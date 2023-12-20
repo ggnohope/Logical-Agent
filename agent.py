@@ -2,7 +2,7 @@ from enum import Enum
 
 import pygame
 
-from constants import *
+from const import *
 
 
 class Direction(Enum):

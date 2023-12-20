@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from constants import *
+from const import *
 
 
 class Cell:

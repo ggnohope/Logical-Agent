@@ -1,5 +1,5 @@
 from cell import Cell
-from constants import *
+from const import *
 
 
 class Map:

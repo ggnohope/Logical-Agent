@@ -16,9 +16,9 @@ class Game:
         pygame.font.init()
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.caption = pygame.display.set_caption(TITLE)
-        self.font = pygame.font.Font(FONT_STYLE, 20)
-        self.font_score = pygame.font.Font(FONT_STYLE, 25)
-        self.font_title = pygame.font.Font(FONT_STYLE, 55)
+        self.font = pygame.font.Font(FONT_STYLE, 15)
+        self.font_score = pygame.font.Font(FONT_STYLE, 15)
+        self.font_title = pygame.font.Font(FONT_STYLE, 30)
 
         self.map = None
         self.map_size = None

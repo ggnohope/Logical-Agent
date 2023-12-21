@@ -27,16 +27,18 @@ class Game:
 
         self.agent = Agent()
         
-        length_header = MAIN_BUTTON_LENGTH/3*2
-        x_header = (CELL_SIZE*10 - 3*length_header) / 5
-        posx_level = [x_header, 2*x_header+length_header, 3*x_header+2*length_header]
-        posy = WINDOW_HEIGHT/10*9
-        self.button_reset = Buttons(self, WHITE, posx_level[0], posy, length_header, MAIN_BUTTON_HEIGHT, 'Reset')
-        self.button_step = Buttons(self, WHITE, posx_level[1], posy, length_header, MAIN_BUTTON_HEIGHT, 'Step')
-        self.button_play = Buttons(self, WHITE, posx_level[2], posy, length_header, MAIN_BUTTON_HEIGHT, 'Play')
+        self.length_header = MAIN_BUTTON_LENGTH/3*2
+        x_header = (CELL_SIZE*10 - 4*self.length_header) / 6
+        self.posx_level = [x_header, 2*x_header+self.length_header, 3*x_header+2*self.length_header, 4*x_header+3*self.length_header]
+        self.posy = WINDOW_HEIGHT/10*9
+        self.button_reset = Buttons(self, WHITE, self.posx_level[0], self.posy, self.length_header, MAIN_BUTTON_HEIGHT, 'Reset')
+        self.button_step = Buttons(self, WHITE, self.posx_level[1], self.posy, self.length_header, MAIN_BUTTON_HEIGHT, 'Step')
+        self.button_play = Buttons(self, WHITE, self.posx_level[2], self.posy, self.length_header, MAIN_BUTTON_HEIGHT, 'Play')
+        self.button_pause = Buttons(self, WHITE, self.posx_level[3], self.posy, self.length_header, MAIN_BUTTON_HEIGHT, 'Pause')
         
-        self.playing = False
-        self.step_by_step = False
+        self.is_reset = False
+        self.is_step = False
+        self.is_playing = True
         
         x_map = WINDOW_WIDTH/2 + CELL_SIZE*3.2
         y_map = WINDOW_HEIGHT/10 
@@ -49,10 +51,15 @@ class Game:
         
     def run(self):
         while True:
-            if self.state == "menu":
-                self.draw_main_screen()
-            elif self.state == "running":
-                self.test_ui()
+            self.draw_main_screen()
+            if self.state == "running":
+                if self.is_playing == True:
+                    self.test_ui()
+                elif self.is_step == True:
+                    self.test_ui()
+                    self.is_step = False
+                else: 
+                    self.draw_running_screen()
             elif self.state == "success":
                 self.draw_success_screen()
             elif self.state == "failed":
@@ -60,7 +67,6 @@ class Game:
 
     def draw_main_screen(self):
         self.draw_layout()
-        
         pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -171,15 +177,6 @@ class Game:
         self.agent.cell.visited = True
         self.draw_running_screen()
         
-        # self.draw_layout()
-        # pos = pygame.mouse.get_pos()
-        # for event in pygame.event.get():
-        #     if event.type == pygame.QUIT:
-        #         pygame.quit()
-        #         sys.exit()
-        #     self.event_mouse_motion(event, pos)
-        #     self.event_mouse_click(event, pos)
-
         if (
             (self.agent.direction == Direction.UP and self.agent.cell.y > 0)
             or (self.agent.direction == Direction.DOWN and self.agent.cell.y < 9)
@@ -233,6 +230,7 @@ class Game:
         self.button_reset.draw_button(STEELBLUE)
         self.button_step.draw_button(STEELBLUE)
         self.button_play.draw_button(STEELBLUE)
+        self.button_pause.draw_button(STEELBLUE)
         
     def draw_button(self, sc, rect, button_color, text, text_color):
         # draw button
@@ -259,7 +257,6 @@ class Game:
         self.sketch_footer_select()
         self.draw_title()
         pygame.draw.line(self.screen, pygame.Color('Black'), (CELL_SIZE*10.5, 0), (CELL_SIZE*10.5, WINDOW_HEIGHT), 2)
-        pygame.draw.line(self.screen, pygame.Color('Black'), (CELL_SIZE*10.5, 0), (CELL_SIZE*10.5, WINDOW_HEIGHT), 2)
     
     def draw_score(self):
         score = self.agent.score
@@ -284,6 +281,8 @@ class Game:
         self.screen.blit(gold_text, gold_rect)
         
     def event_mouse_motion(self, event, pos):
+        self.map1.colour, self.map2.colour, self.map3.colour, self.map4.colour, self.map5.colour = WHITE, WHITE, WHITE, WHITE, WHITE
+        self.button_reset.colour, self.button_step.colour, self.button_play.colour, self.button_pause.colour = WHITE, WHITE, WHITE, WHITE
         if event.type == pygame.MOUSEMOTION:
                 if self.map1.isOver(pos):
                     self.map1.colour = (23, 127, 117)
@@ -301,38 +300,50 @@ class Game:
                     self.button_step.colour = (23, 127, 117)
                 elif self.button_play.isOver(pos):
                     self.button_play.colour = (23, 127, 117)
-                else:
-                    self.map1.colour, self.map2.colour, self.map3.colour, self.map4.colour, self.map5.colour, self.button_reset.colour,self.button_step.colour,self.button_play.colour = WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE
+                elif self.button_pause.isOver(pos):
+                    self.button_pause.colour = (23, 127, 117)
         
     def event_mouse_click(self, event, pos):
         if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.map1.isOver(pos):
-                    self.map = Map(MAP_1)
-                    self.map_size = self.map.map_size
-                    self.agent.cell = self.map.get_agent_cell()
-                    self.agent.map_size = self.map.map_size
-                    self.state = "running"
-                elif self.map2.isOver(pos):
-                    self.map = Map(MAP_2)
-                    self.map_size = self.map.map_size
-                    self.agent.cell = self.map.get_agent_cell()
-                    self.agent.map_size = self.map.map_size
-                    self.state = "running"
-                elif self.map3.isOver(pos):
-                    self.map = Map(MAP_3)
-                    self.map_size = self.map.map_size
-                    self.agent.cell = self.map.get_agent_cell()
-                    self.agent.map_size = self.map.map_size
-                    self.state = "running"
-                elif self.map4.isOver(pos):
-                    self.map = Map(MAP_4)
-                    self.map_size = self.map.map_size
-                    self.agent.cell = self.map.get_agent_cell()
-                    self.agent.map_size = self.map.map_size
-                    self.state = "running"
-                elif self.map5.isOver(pos):
-                    self.map = Map(MAP_5)
-                    self.map_size = self.map.map_size
-                    self.agent.cell = self.map.get_agent_cell()
-                    self.agent.map_size = self.map.map_size
-                    self.state = "running"
+            self.map1.colour, self.map2.colour, self.map3.colour, self.map4.colour, self.map5.colour, self.button_reset.colour,self.button_step.colour,self.button_play.colour, self.button_pause.colour = WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE
+            if self.map1.isOver(pos):
+                self.map = Map(MAP_1)
+                self.map_size = self.map.map_size
+                self.agent.cell = self.map.get_agent_cell()
+                self.agent.map_size = self.map.map_size
+                self.state = "running"
+            elif self.map2.isOver(pos):
+                self.map = Map(MAP_2)
+                self.map_size = self.map.map_size
+                self.agent.cell = self.map.get_agent_cell()
+                self.agent.map_size = self.map.map_size
+                self.state = "running"
+            elif self.map3.isOver(pos):
+                self.map = Map(MAP_3)
+                self.map_size = self.map.map_size
+                self.agent.cell = self.map.get_agent_cell()
+                self.agent.map_size = self.map.map_size
+                self.state = "running"
+            elif self.map4.isOver(pos):
+                self.map = Map(MAP_4)
+                self.map_size = self.map.map_size
+                self.agent.cell = self.map.get_agent_cell()
+                self.agent.map_size = self.map.map_size
+                self.state = "running"
+            elif self.map5.isOver(pos):
+                self.map = Map(MAP_5)
+                self.map_size = self.map.map_size
+                self.agent.cell = self.map.get_agent_cell()
+                self.agent.map_size = self.map.map_size
+                self.state = "running"
+            elif self.button_reset.isOver(pos):
+                self.is_reset == True
+            elif self.button_step.isOver(pos):
+                self.is_playing = False
+                self.is_step = True
+            elif self.button_play.isOver(pos):
+                self.is_playing = not (self.is_playing)
+                self.is_step = False
+            elif self.button_pause.isOver(pos):
+                self.is_playing = False 
+                self.is_step = False    

@@ -2,6 +2,7 @@ from enum import Enum
 
 import pygame
 
+from const import *
 from constants import *
 
 

@@ -16,9 +16,9 @@ class Game:
         pygame.font.init()
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.caption = pygame.display.set_caption(TITLE)
-        self.font = pygame.font.Font(FONT_STYLE, 20)
-        self.font_score = pygame.font.Font(FONT_STYLE, 25)
-        self.font_title = pygame.font.Font(FONT_STYLE, 55)
+        self.font = pygame.font.Font(FONT_STYLE, 15)
+        self.font_score = pygame.font.Font(FONT_STYLE, 15)
+        self.font_title = pygame.font.Font(FONT_STYLE, 30)
 
         self.map = None
         self.map_size = None
@@ -34,6 +34,9 @@ class Game:
         self.button_reset = Buttons(self, WHITE, posx_level[0], posy, length_header, MAIN_BUTTON_HEIGHT, 'Reset')
         self.button_step = Buttons(self, WHITE, posx_level[1], posy, length_header, MAIN_BUTTON_HEIGHT, 'Step')
         self.button_play = Buttons(self, WHITE, posx_level[2], posy, length_header, MAIN_BUTTON_HEIGHT, 'Play')
+        
+        self.playing = False
+        self.step_by_step = False
         
         x_map = WINDOW_WIDTH/2 + CELL_SIZE*3.2
         y_map = WINDOW_HEIGHT/10 

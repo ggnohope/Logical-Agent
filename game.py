@@ -6,7 +6,7 @@ import pygame
 from agent import *
 from const import *
 from map import Map
-from notfication import Notification
+from noti import Noti
 from buttons import *
 
 
@@ -50,8 +50,18 @@ class Game:
         self.map5 = Buttons(self, WHITE, x_map , posy_map[4], MAIN_BUTTON_LENGTH, MAIN_BUTTON_HEIGHT, 'Map 5')
         
     def run(self):
+        # self.sketch_main_screen()
+        self.sketch_main_screen()
         while True:
-            self.draw_main_screen()
+            self.sketch_layout()
+            pos = pygame.mouse.get_pos()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                self.event_mouse_motion(event, pos)
+                self.event_mouse_click(event, pos)
+                
             if self.state == "running":
                 if self.is_playing == True:
                     self.test_ui()
@@ -59,14 +69,14 @@ class Game:
                     self.test_ui()
                     self.is_step = False
                 else: 
-                    self.draw_running_screen()
+                    self.sketch_running_screen()
             elif self.state == "success":
-                self.draw_success_screen()
+                self.sketch_success_screen()
             elif self.state == "failed":
-                self.draw_failed_screen()
+                self.sketch_failed_screen()
 
-    def draw_main_screen(self):
-        self.draw_layout()
+    def sketch_main_screen(self):
+        self.sketch_layout()
         pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -75,37 +85,37 @@ class Game:
             self.event_mouse_motion(event, pos)
             self.event_mouse_click(event, pos)
 
-    def draw_running_screen(self, noti_type: Notification = None):
+    def sketch_running_screen(self, noti_type: Noti = None):
         # Draw filter
         pygame.draw.rect(self.screen, pygame.Color('White'), (CELL_SIZE*12, CELL_SIZE*2, WINDOW_WIDTH - CELL_SIZE*12, WINDOW_HEIGHT/4))
 
         # draw score and gold collected
-        self.draw_score()
-        self.draw_gold()
+        self.sketch_score()
+        self.sketch_gold()
         
         self.map.draw(self.screen)
         
-        # draw notification
+        # draw Noti
         if noti_type:
-            self.draw_notification(noti_type)
+            self.sketch_noti(noti_type)
 
         pygame.display.update()
 
-    def draw_notification(self, noti_type: Notification):
-        if noti_type == Notification.KILL_WUMPUS:
+    def sketch_noti(self, noti_type: Noti):
+        if noti_type == Noti.KILL_WUMPUS:
             text = self.font.render("KILL WUMPUS !", True, (23, 127, 117))
             img = pygame.image.load(WUMPUS_IMG).convert_alpha()
-        elif noti_type == Notification.DETECT_PIT:
+        elif noti_type == Noti.DETECT_PIT:
             text = self.font.render("DETECT PIT !", True, (23, 127, 117))
             img = pygame.image.load(PIT_IMG).convert_alpha()
-        elif noti_type == Notification.COLLECT_GOLD:
+        elif noti_type == Noti.COLLECT_GOLD:
             text = self.font.render("COLLECT GOLD !: +1000", True, (23, 127, 117))
             img = pygame.image.load(CHEST_IMG).convert_alpha()
-        elif noti_type == Notification.SHOOT_ARROW:
+        elif noti_type == Noti.SHOOT_ARROW:
             text = self.font.render("SHOOT ARROW !: -100", True, (23, 127, 117))
             img = pygame.image.load(ARROW_RIGHT_IMG).convert_alpha()
 
-        # Show text notification
+        # Show text Noti
         text_rect = text.get_rect()
         text_rect.center = (
             WINDOW_WIDTH // 2 + CELL_SIZE * 5,
@@ -123,9 +133,8 @@ class Game:
         )
 
         pygame.display.update()
-        pygame.time.delay(500)
 
-    def draw_success_screen(self):
+    def sketch_success_screen(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -149,7 +158,7 @@ class Game:
         pygame.time.delay(3000)
         self.state = "menu"
 
-    def draw_failed_screen(self):
+    def sketch_failed_screen(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -175,7 +184,7 @@ class Game:
 
     def test_ui(self):
         self.agent.cell.visited = True
-        self.draw_running_screen()
+        self.sketch_running_screen()
         
         if (
             (self.agent.direction == Direction.UP and self.agent.cell.y > 0)
@@ -184,11 +193,11 @@ class Game:
             or (self.agent.direction == Direction.RIGHT and self.agent.cell.x < 9)
         ):
             arrow_cell = self.agent.shoot_arrow(self.map.grid_cells)
-            self.draw_running_screen(Notification.SHOOT_ARROW)
+            self.sketch_running_screen(Noti.SHOOT_ARROW)
 
         if "G" in self.agent.cell.type:
-            self.draw_running_screen()
-            self.draw_running_screen(Notification.COLLECT_GOLD)
+            self.sketch_running_screen()
+            self.sketch_running_screen(Noti.COLLECT_GOLD)
             self.agent.collect_gold()
 
         direc = random.choice(list(Direction))
@@ -200,48 +209,38 @@ class Game:
         ):
             if direc == Direction.UP:
                 self.agent.turn_up()
-                self.draw_running_screen()
+                self.sketch_running_screen()
                 self.agent.move_forward(self.map.grid_cells)
             if direc == Direction.DOWN:
                 self.agent.turn_down()
-                self.draw_running_screen()
+                self.sketch_running_screen()
                 self.agent.move_forward(self.map.grid_cells)
             if direc == Direction.LEFT:
                 self.agent.turn_left()
-                self.draw_running_screen()
+                self.sketch_running_screen()
                 self.agent.move_forward(self.map.grid_cells)
             if direc == Direction.RIGHT:
                 self.agent.turn_right()
-                self.draw_running_screen()
+                self.sketch_running_screen()
                 self.agent.move_forward(self.map.grid_cells)
 
-        pygame.time.delay(500)
+        pygame.time.delay(100)
 
     def sketch_map_select(self):
         self.screen.fill(pygame.Color('White'))
-        self.map1.draw_button(STEELBLUE)
-        self.map2.draw_button(STEELBLUE)
-        self.map3.draw_button(STEELBLUE)
-        self.map4.draw_button(STEELBLUE)
-        self.map5.draw_button(STEELBLUE)
+        self.map1.sketch_button(STEELBLUE)
+        self.map2.sketch_button(STEELBLUE)
+        self.map3.sketch_button(STEELBLUE)
+        self.map4.sketch_button(STEELBLUE)
+        self.map5.sketch_button(STEELBLUE)
         
     def sketch_footer_select(self):
-        # self.screen.fill(pygame.Color('White'))
-        self.button_reset.draw_button(STEELBLUE)
-        self.button_step.draw_button(STEELBLUE)
-        self.button_play.draw_button(STEELBLUE)
-        self.button_pause.draw_button(STEELBLUE)
-        
-    def draw_button(self, sc, rect, button_color, text, text_color):
-        # draw button
-        pygame.draw.rect(sc, button_color, rect)
-        # draw text inside button
-        text_sc = self.font.render(text, True, text_color)
-        text_rect = text_sc.get_rect()
-        text_rect.center = rect.center
-        self.screen.blit(text_sc, text_rect)
+        self.button_reset.sketch_button(STEELBLUE)
+        self.button_step.sketch_button(STEELBLUE)
+        self.button_play.sketch_button(STEELBLUE)
+        self.button_pause.sketch_button(STEELBLUE)
     
-    def draw_title(self):
+    def sketch_title(self):
         text = self.font_title.render("Wumpus World", True, (23, 127, 117))
         text_rect = text.get_rect()
         text_rect.center = (
@@ -250,15 +249,15 @@ class Game:
         )
         self.screen.blit(text, text_rect)
         
-    def draw_layout(self):
+    def sketch_layout(self):
         pygame.display.update()
         self.screen.fill(pygame.Color('White'))
         self.sketch_map_select()
         self.sketch_footer_select()
-        self.draw_title()
+        self.sketch_title()
         pygame.draw.line(self.screen, pygame.Color('Black'), (CELL_SIZE*10.5, 0), (CELL_SIZE*10.5, WINDOW_HEIGHT), 2)
     
-    def draw_score(self):
+    def sketch_score(self):
         score = self.agent.score
         score_text = self.font_score.render(
             "YOUR SCORE: " + str(score), True, (0, 0, 0)
@@ -270,7 +269,7 @@ class Game:
         )
         self.screen.blit(score_text, score_rect)
         
-    def draw_gold(self):
+    def sketch_gold(self):
         gold = self.agent.gold
         gold_text = self.font.render("Gold collected: " + str(gold), True, (0, 0, 0))
         gold_rect = gold_text.get_rect()
@@ -283,25 +282,25 @@ class Game:
     def event_mouse_motion(self, event, pos):
         self.map1.colour, self.map2.colour, self.map3.colour, self.map4.colour, self.map5.colour = WHITE, WHITE, WHITE, WHITE, WHITE
         self.button_reset.colour, self.button_step.colour, self.button_play.colour, self.button_pause.colour = WHITE, WHITE, WHITE, WHITE
-        if event.type == pygame.MOUSEMOTION:
-                if self.map1.isOver(pos):
-                    self.map1.colour = (23, 127, 117)
-                elif self.map2.isOver(pos):
-                    self.map2.colour = (23, 127, 117)
-                elif self.map3.isOver(pos):
-                    self.map3.colour = (23, 127, 117)
-                elif self.map4.isOver(pos):
-                    self.map4.colour = (23, 127, 117)
-                elif self.map5.isOver(pos):
-                    self.map5.colour = (23, 127, 117)
-                elif self.button_reset.isOver(pos):
-                    self.button_reset.colour = (23, 127, 117)
-                elif self.button_step.isOver(pos):
-                    self.button_step.colour = (23, 127, 117)
-                elif self.button_play.isOver(pos):
-                    self.button_play.colour = (23, 127, 117)
-                elif self.button_pause.isOver(pos):
-                    self.button_pause.colour = (23, 127, 117)
+        # if event.type == pygame.MOUSEMOTION:
+        if self.map1.isOver(pos):
+            self.map1.colour = (23, 127, 117)
+        elif self.map2.isOver(pos):
+            self.map2.colour = (23, 127, 117)
+        elif self.map3.isOver(pos):
+            self.map3.colour = (23, 127, 117)
+        elif self.map4.isOver(pos):
+            self.map4.colour = (23, 127, 117)
+        elif self.map5.isOver(pos):
+            self.map5.colour = (23, 127, 117)
+        elif self.button_reset.isOver(pos):
+            self.button_reset.colour = (23, 127, 117)
+        elif self.button_step.isOver(pos):
+            self.button_step.colour = (23, 127, 117)
+        elif self.button_play.isOver(pos):
+            self.button_play.colour = (23, 127, 117)
+        elif self.button_pause.isOver(pos):
+            self.button_pause.colour = (23, 127, 117)
         
     def event_mouse_click(self, event, pos):
         if event.type == pygame.MOUSEBUTTONDOWN:

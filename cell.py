@@ -19,6 +19,8 @@ class Cell:
             "agent": None,
             "breeze": None,
             "stench": None,
+            "wall": pygame.image.load(WALL_IMG).convert_alpha(),
+            "wall_outline": pygame.image.load(WALL_OUTLINE_IMG).convert_alpha(),
         }
 
     def init_img_list(self):
@@ -79,9 +81,29 @@ class Cell:
             pygame.draw.rect(
                 screen, pygame.Color(173, 116, 96), (x, y, CELL_SIZE, CELL_SIZE)
             )
+            self.img_list["wall_outline"] = pygame.transform.scale(
+                self.img_list["wall_outline"], (CELL_SIZE , CELL_SIZE )
+            )
+            screen.blit(
+                self.img_list["wall_outline"],
+                (
+                    self.x * CELL_SIZE,
+                    self.y * CELL_SIZE,
+                ),
+            )
         elif self.img_list["arrow"] and not self.visited:
             pygame.draw.rect(
                 screen, pygame.Color(173, 116, 96), (x, y, CELL_SIZE, CELL_SIZE)
+            )
+            self.img_list["wall_outline"] = pygame.transform.scale(
+                self.img_list["wall_outline"], (CELL_SIZE , CELL_SIZE )
+            )
+            screen.blit(
+                self.img_list["wall_outline"],
+                (
+                    self.x * CELL_SIZE,
+                    self.y * CELL_SIZE,
+                ),
             )
             self.img_list["arrow"] = pygame.transform.scale(
                 self.img_list["arrow"], (CELL_SIZE, CELL_SIZE)
@@ -98,10 +120,32 @@ class Cell:
             self.visited = True
             self.img_list["arrow"] = None
         elif self.visited:
-            pygame.draw.rect(
-                screen, pygame.Color(136, 56, 45), (x, y, CELL_SIZE, CELL_SIZE)
-            )
+            # pygame.draw.rect(
+            #     screen, pygame.Color(136, 56, 45), (x, y, CELL_SIZE, CELL_SIZE)
+            # )
+            if self.img_list["wall"]:
+                self.img_list["wall"] = pygame.transform.scale(
+                    self.img_list["wall"], (CELL_SIZE, CELL_SIZE)
+                )
+                screen.blit(
+                    self.img_list["wall"],
+                    (
+                        self.x * CELL_SIZE,
+                        self.y * CELL_SIZE,
+                    ),
+                )
             self.draw_image_cell(screen)
+        elif self.img_list["agent"]: 
+            self.img_list["agent"] = pygame.transform.scale(
+                self.img_list["agent"], (CELL_SIZE, CELL_SIZE)
+            )
+            screen.blit(
+                self.img_list["agent"],
+                (
+                    self.x * CELL_SIZE,
+                    self.y * CELL_SIZE,
+                ),
+            )
 
         pygame.draw.line(screen, pygame.Color(0, 0, 0), (x, y), (x + CELL_SIZE, y), 2)
         pygame.draw.line(
@@ -163,59 +207,73 @@ class Cell:
             )
         if self.img_list["obstacle"]:
             self.img_list["obstacle"] = pygame.transform.scale(
-                self.img_list["obstacle"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
+                self.img_list["obstacle"], (CELL_SIZE // 2, CELL_SIZE // 2)
             )
             screen.blit(
                 self.img_list["obstacle"],
                 (
-                    self.x * CELL_SIZE + CELL_SIZE // 10,
-                    self.y * CELL_SIZE + CELL_SIZE // 10,
-                ),
-            )
-        if self.img_list["agent"]:
-            self.img_list["agent"] = pygame.transform.scale(
-                self.img_list["agent"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
-            )
-            screen.blit(
-                self.img_list["agent"],
-                (
-                    self.x * CELL_SIZE + CELL_SIZE // 10,
-                    self.y * CELL_SIZE + CELL_SIZE // 10,
+                    self.x * CELL_SIZE + CELL_SIZE // 3.4,
+                    self.y * CELL_SIZE + CELL_SIZE // 3.4,
                 ),
             )
         if self.img_list["breeze"]:
-            self.img_list["breeze"] = pygame.transform.scale(
-                self.img_list["breeze"], (CELL_SIZE // breeze_stench_count, CELL_SIZE)
-            )
-            screen.blit(
-                self.img_list["breeze"],
-                (
-                    self.x * CELL_SIZE,
-                    self.y * CELL_SIZE,
-                ),
-            )
+            if breeze_stench_count == 1:
+                self.img_list["breeze"] = pygame.transform.scale(
+                    self.img_list["breeze"], (CELL_SIZE  // 1.5, CELL_SIZE // 1.5)
+                )
+                screen.blit(
+                    self.img_list["breeze"],
+                    (
+                        self.x * CELL_SIZE +(CELL_SIZE / 4.2),
+                        self.y * CELL_SIZE  + (CELL_SIZE / 4.2),
+                    ),
+                )
+            elif breeze_stench_count == 2:
+                self.img_list["breeze"] = pygame.transform.scale(
+                    self.img_list["breeze"], (CELL_SIZE // breeze_stench_count, CELL_SIZE//breeze_stench_count)
+                )
+                screen.blit(
+                    self.img_list["breeze"],
+                    (
+                        self.x * CELL_SIZE,
+                        self.y * CELL_SIZE  + (CELL_SIZE / 3) ,
+                    ),
+                )
         if self.img_list["stench"]:
             if breeze_stench_count == 1:
                 self.img_list["stench"] = pygame.transform.scale(
                     self.img_list["stench"],
-                    (CELL_SIZE // breeze_stench_count, CELL_SIZE),
+                    (CELL_SIZE // 1.5, CELL_SIZE // 1.5),
                 )
                 screen.blit(
                     self.img_list["stench"],
                     (
-                        self.x * CELL_SIZE,
-                        self.y * CELL_SIZE,
+                        self.x * CELL_SIZE + (CELL_SIZE / 4.2),
+                        self.y * CELL_SIZE  + (CELL_SIZE / 4.2),
                     ),
                 )
             elif breeze_stench_count == 2:
                 self.img_list["stench"] = pygame.transform.scale(
                     self.img_list["stench"],
-                    (CELL_SIZE // breeze_stench_count, CELL_SIZE),
+                    (CELL_SIZE // breeze_stench_count, CELL_SIZE // breeze_stench_count),
                 )
                 screen.blit(
                     self.img_list["stench"],
                     (
                         self.x * CELL_SIZE + CELL_SIZE // breeze_stench_count,
-                        self.y * CELL_SIZE,
+                        self.y * CELL_SIZE  + (CELL_SIZE / 3),
                     ),
                 )
+        if self.img_list["agent"]:
+            self.img_list["agent"] = pygame.transform.scale(
+                self.img_list["agent"], (CELL_SIZE, CELL_SIZE)
+            )
+            screen.blit(
+                self.img_list["agent"],
+                (
+                    self.x * CELL_SIZE,
+                    self.y * CELL_SIZE,
+                ),
+            )
+        
+            

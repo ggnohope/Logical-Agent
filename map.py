@@ -18,6 +18,7 @@ class Map_UI:
                 line.strip()
                 cells = line.split(".")
                 for j, cell in enumerate(cells):
+                    # print(cell)
                     if cell == "A":
                         cell = Cell_UI(j + 1, self.map_size - i, "A") # since (1, 1) is the coord of bottom left
                     elif cell == "P":
@@ -35,7 +36,21 @@ class Map_UI:
     
     def remove_wumpus(self, converted_pos):
         pass
+    
+    def get_neighbors(self, cell):
+        neighbors = []
+        i = self.map_size * (self.map_size - cell.y) + cell.x - 1
+        if cell.x > 1:
+            neighbors.append(self.map[i - 1])
+        if cell.x < 10:
+            neighbors.append(self.map[i + 1])
+        if cell.y > 1:
+            neighbors.append(self.map[i + 10])
+        if cell.y < 10:
+            neighbors.append(self.map[i - 10])
 
+        return neighbors
+    
     def infer_cell_attribute(self):
         for cell in self.map:
             cell.init_attribute_imgs()
@@ -46,9 +61,22 @@ class Map_UI:
                 if neighbor.attribute_imgs["wumpus"] != None:
                     img = pygame.image.load(STENCH_IMG).convert_alpha()
                     cell.attribute_imgs["stench"] = img
+                    cell.content = cell.content.replace('-','')
+                    cell.content += 'S'
+  
                 if neighbor.attribute_imgs["pit"] != None:
                     img = pygame.image.load(BREEZE_IMG).convert_alpha()
                     cell.attribute_imgs["breeze"] = img
+                    cell.content = cell.content.replace('-','')
+                    cell.content += 'B'
+                    
+        # i = 1
+        # for cell in self.map:
+        #     i += 1
+        #     if i%10 == 0: 
+        #         print('\n')
+        #     print(cell.content, end=',')
+
             
     def draw(self, screen):
         [cell.draw(screen) for cell in self.map]

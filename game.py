@@ -5,13 +5,17 @@ import pygame
 
 from agent import *
 from const import *
-from map import Map
+from map import *
 from noti import Noti
 from buttons import *
 from action import *
 from agent_brain import *
-from test import action_list
+# from test import action_list
 
+from controller import *
+# controller = Controller(map.map, agent.current_cell)
+# controller.explore_world()
+# print(controller.action_list)
 
 class Game:
     def __init__(self) -> None:
@@ -37,8 +41,8 @@ class Game:
         
         self.length_header = MAIN_BUTTON_LENGTH/3*2
         x_header = (CELL_SIZE*10 - 4*self.length_header) / 6
-        self.posx_level = [x_header, 2*x_header+self.length_header, 3*x_header+2*self.length_header, 4*x_header+3*self.length_header]
-        self.posy = WINDOW_HEIGHT/10*9
+        self.posx_level = [x_header + CELL_SIZE, 2*x_header+self.length_header + CELL_SIZE, 3*x_header+2*self.length_header + CELL_SIZE, 4*x_header+3*self.length_header + CELL_SIZE]
+        self.posy = WINDOW_HEIGHT*0
         self.button_reset = Buttons(self, WHITE, self.posx_level[0], self.posy, self.length_header, MAIN_BUTTON_HEIGHT, 'Reset')
         self.button_step = Buttons(self, WHITE, self.posx_level[1], self.posy, self.length_header, MAIN_BUTTON_HEIGHT, 'Step')
         self.button_play = Buttons(self, WHITE, self.posx_level[2], self.posy, self.length_header, MAIN_BUTTON_HEIGHT, 'Play')
@@ -48,7 +52,7 @@ class Game:
         self.is_step = False
         self.is_playing = True
         
-        x_map = WINDOW_WIDTH/2 + CELL_SIZE*3.2
+        x_map = WINDOW_WIDTH/2 + CELL_SIZE*4
         y_map = WINDOW_HEIGHT/10 
         posy_map = [WINDOW_HEIGHT/2.8 + y_map,WINDOW_HEIGHT/2.8 + y_map*2,WINDOW_HEIGHT/2.8 + y_map*3,WINDOW_HEIGHT/2.8 + y_map*4, WINDOW_HEIGHT/2.8 + y_map*5]
         self.map1 = Buttons(self, WHITE, x_map , posy_map[0], MAIN_BUTTON_LENGTH, MAIN_BUTTON_HEIGHT, 'Map 1')
@@ -108,137 +112,7 @@ class Game:
             self.sketch_noti(noti_type)
 
         pygame.display.update()
-
-    def sketch_noti(self, noti_type: Noti):
-        if noti_type == Noti.KILL_WUMPUS:
-            text = self.font.render("KILL WUMPUS !", True, (23, 127, 117))
-            img = pygame.image.load(WUMPUS_IMG).convert_alpha()
-        elif noti_type == Noti.DETECT_PIT:
-            text = self.font.render("DETECT PIT !", True, (23, 127, 117))
-            img = pygame.image.load(PIT_IMG).convert_alpha()
-        elif noti_type == Noti.COLLECT_GOLD:
-            text = self.font.render("COLLECT GOLD !: +1000", True, (23, 127, 117))
-            img = pygame.image.load(CHEST_IMG).convert_alpha()
-        elif noti_type == Noti.SHOOT_ARROW:
-            text = self.font.render("SHOOT ARROW !: -100", True, (23, 127, 117))
-            img = pygame.image.load(ARROW_RIGHT_IMG).convert_alpha()
-        elif noti_type == Noti.PERCEIVE_BREEZE:
-            text = self.font.render("PERCEIVE BREEZE !", True, (23, 127, 117))
-            img = pygame.image.load(BREEZE_IMG).convert_alpha()
-        elif noti_type == Noti.PERCEIVE_STENCH:
-            text = self.font.render("PERCEIVE STENCH !", True, (23, 127, 117))
-            img = pygame.image.load(STENCH_IMG).convert_alpha()
-
-        # Show text Noti
-        text_rect = text.get_rect()
-        text_rect.center = (
-            WINDOW_WIDTH // 2 + CELL_SIZE * 5,
-            WINDOW_HEIGHT // 3.5,
-        )
-        self.screen.blit(text, text_rect)
-        # Show image
-        img = pygame.transform.scale(img, (CELL_SIZE, CELL_SIZE))
-        self.screen.blit(
-            img,
-            (
-                WINDOW_WIDTH // 2 + CELL_SIZE * 4.5,
-                WINDOW_HEIGHT // 3,
-            ),
-        )
-
-        pygame.display.update()
-
-    def sketch_success_screen(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        background = pygame.image.load(SUCCESS_IMAGE).convert()
-        background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.screen.blit(background, (0, 0))
-
-        text = self.font_title.render("SUCCESSFUL!!!", True, (0, 0, 0))
-        text_rect = text.get_rect()
-        text_rect.center = (WINDOW_WIDTH // 2, 50)
-        self.screen.blit(text, text_rect)
-
-        score = self.agent.score
-        text = self.font_score.render("Your score: " + str(score), True, (0, 0, 0))
-        text_rect.center = (WINDOW_WIDTH // 2 + 70, 150)
-        self.screen.blit(text, text_rect)
-
-        pygame.display.update()
-        pygame.time.delay(3000)
-        self.state = "menu"
-
-    def sketch_failed_screen(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        background = pygame.image.load(FAILED_IMAGE).convert()
-        background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.screen.blit(background, (0, 0))
-
-        text = self.font_title.render("FAILED !!!", True, (255, 255, 255))
-        text_rect = text.get_rect()
-        text_rect.center = (WINDOW_WIDTH // 2, 50)
-        self.screen.blit(text, text_rect)
-
-        text = self.font.render("Try to solve again :(", True, (255, 255, 255))
-        text_rect.center = (WINDOW_WIDTH // 2, 150)
-        self.screen.blit(text, text_rect)
-
-        pygame.display.update()
-        pygame.time.delay(3000)
-        self.state = "menu"
-    
-
-    def solve(self):
-        self.agent.cell.visited = True
-        self.sketch_running_screen()
-        
-        if (
-            (self.agent.direction == Direction.UP and self.agent.cell.y > 0)
-            or (self.agent.direction == Direction.DOWN and self.agent.cell.y < 9)
-            or (self.agent.direction == Direction.LEFT and self.agent.cell.x > 0)
-            or (self.agent.direction == Direction.RIGHT and self.agent.cell.x < 9)
-        ):
-            arrow_cell = self.agent.shoot_arrow(self.map.grid_cells)
-            self.sketch_running_screen(Noti.SHOOT_ARROW)
-
-        if "G" in self.agent.cell.type:
-            self.sketch_running_screen()
-            self.sketch_running_screen(Noti.COLLECT_GOLD)
-            self.agent.collect_gold()
-
-        direc = random.choice(list(Direction))
-        if (
-            (direc == Direction.UP and self.agent.cell.y > 0)
-            or (direc == Direction.DOWN and self.agent.cell.y < 9)
-            or (direc == Direction.LEFT and self.agent.cell.x > 0)
-            or (direc == Direction.RIGHT and self.agent.cell.y < 9)
-        ):
-            if direc == Direction.UP:
-                self.agent.turn_up()
-                self.sketch_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-            if direc == Direction.DOWN:
-                self.agent.turn_down()
-                self.sketch_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-            if direc == Direction.LEFT:
-                self.agent.turn_left()
-                self.sketch_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-            if direc == Direction.RIGHT:
-                self.agent.turn_right()
-                self.sketch_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-
-        pygame.time.delay(100)
+        # pygame.time.delay(1000)
         
     def show_result(self):
         self.sketch_running_screen()
@@ -251,13 +125,23 @@ class Game:
                 self.state = "failed"
             return
 
+        i = self.agent.current_cell.get_converted_pos()
+        if self.agent.direction == TURN_UP and i-10 > 0:
+                cell_ahead = self.map.map[i-10]
+        elif self.agent.direction == TURN_LEFT and i-1 > 0:
+            cell_ahead = self.map.map[i-1]
+        elif self.agent.direction == TURN_DOWN and i+10 < 100:
+            cell_ahead = self.map.map[i+10]
+        elif self.agent.direction == TURN_RIGHT and i+1 < 100:
+            cell_ahead = self.map.map[i+1]
+                
         # get action
         action = self.action_list[self.current_step]
-        print(action)
         # increase the step
         if len(self.action_list) > self.current_step:
             self.current_step += 1
 
+        # print(action)
         if action == Action.TURN_LEFT.value:
             self.agent.turn_left()
         elif action == Action.TURN_RIGHT.value:
@@ -267,8 +151,8 @@ class Game:
         elif action == Action.TURN_DOWN.value:
             self.agent.turn_down()
         elif action == Action.MOVE_FORWARD.value:
-            self.agent.move_forward(self.map.grid_cells)
-        elif action == Action.GRAB_GOLD.value:
+            self.agent.move_forward(self.map)
+        elif action == Action.COLLECT_GOLD.value:
             self.sketch_running_screen(Noti.COLLECT_GOLD)
             self.agent.collect_gold()
         elif action == Action.PERCEIVE_BREEZE.value:
@@ -276,108 +160,70 @@ class Game:
         elif action == Action.PERCEIVE_STENCH.value:
             self.sketch_running_screen(Noti.PERCEIVE_STENCH)
         elif action == Action.SHOOT.value:
-            print("Shooting wumpus")
-            arrow_cell = self.agent.shoot_arrow(self.map.grid_cells)
+            # for cell in self.map.map:
+            #     print(cell.content)
+            arrow_cell = self.agent.shoot_arrow(self.map.map)
+            print(f'Arrow Cell: {arrow_cell.content}')
             self.sketch_running_screen(Noti.SHOOT_ARROW)
-            if "W" in arrow_cell.type:
+            # if "W" in arrow_cell.content:
                 # remove Wumpus
-                arrow_cell.type = arrow_cell.type.replace("W", "")
-                arrow_cell.img_list["obstacle"] = None
-                arrow_cell.visited = True
-                # remove stench in neighbor cells
-                adjacents = arrow_cell.get_neighbors(self.map.grid_cells)
-                for adjacent in adjacents:
-                    adjacent.img_list["stench"] = None
-                    adjacent.type = adjacent.type.replace("S", "")
-
-                self.sketch_running_screen(Noti.KILL_WUMPUS)
+            arrow_cell.content = arrow_cell.content.replace("W", "")
+            arrow_cell.attribute_imgs["wumpus"] = None
+            arrow_cell.visited = True
+            # remove stench in neighbor cells
+            adjacents = arrow_cell.get_neighbors(self.map.map)
+            for adjacent in adjacents:
+                adjacent.attribute_imgs["stench"] = None
+                adjacent.content = adjacent.content.replace('S', '')
         elif action == Action.KILL_WUMPUS.value:
-            print("Killing Wumpus")
+            self.sketch_running_screen(Noti.KILL_WUMPUS)
         elif action == Action.KILL_NO_WUMPUS.value:
-            print("Killing, but no Wumpus found")
+            self.sketch_running_screen(Noti.KILL_NO_WUMPUS)
         elif action == Action.KILL_BY_WUMPUS.value:
-            print("Killed by Wumpus")
+            self.sketch_running_screen(Noti.KILL_BY_WUMPUS)
         elif action == Action.KILL_BY_PIT.value:
-            print("Killed by Pit")
+            self.sketch_running_screen(Noti.KILL_BY_PIT)
         elif action == Action.CLIMB_OUT_OF_THE_CAVE.value:
-            print("Climbing out of the cave")
+            self.sketch_running_screen(Noti.CLIMB_OUT_OF_THE_CAVE)
         elif action == Action.DETECT_PIT.value:
-            pit_cell = self.agent_brain.action_cells[self.current_step - 1]
-            pit_x, pit_y = pit_cell.x, pit_cell.y
-            print("Detect pit at:", pit_x, pit_y)
-            pit_cell.visited = True
+            cell_ahead.visited = True
+            self.sketch_running_screen(Noti.DETECT_PIT)
         elif action == Action.DETECT_WUMPUS.value:
-            wumpus_cell = self.agent_brain.action_cells[self.current_step - 1]
-            wumpus_x, wumpus_y = wumpus_cell.x, wumpus_cell.y
-            print("Detect wumpus at:", wumpus_x, wumpus_y)
-            wumpus_cell.visited = True
+            print('Detect wumpus')
+            self.sketch_running_screen(Noti.DETECT_WUMPUS)
         elif action == Action.DETECT_NO_PIT.value:
-            pit_cell = self.agent_brain.action_cells[self.current_step - 1]
-            pit_x, pit_y = pit_cell.x, pit_cell.y
-            print("Detect no pit at:", pit_x, pit_y)
+            cell_ahead.visited = True
         elif action == Action.DETECT_NO_WUMPUS.value:
-            wumpus_cell = self.agent_brain.action_cells[self.current_step - 1]
-            wumpus_x, wumpus_y = wumpus_cell.x, wumpus_cell.y
-            print("Detect no wumpus at:", wumpus_x, wumpus_y)
+            cell_ahead.visited = True
         elif action == Action.INFER_PIT.value:
-            print("Inferring pit")
+            self.sketch_running_screen(Noti.INFER_PIT)
         elif action == Action.INFER_WUMPUS.value:
-            print("Inferring Wumpus")
+            self.sketch_running_screen(Noti.INFER_WUMPUS)
         elif action == Action.REMOVE_KNOWLEDGE_RELATED_TO_WUMPUS.value:
             print("Remove knowledge related to killed wumpus")
         elif action == Action.SHOOT_RANDOMLY.value:
             print("Start shooting randomly")
-        elif action == Action.FAIL_TO_INFER.value:
-            infer_cell = self.agent_brain.action_cells[self.current_step - 1]
-            infer_cell_x, infer_cell_y = infer_cell.x, infer_cell.y
-            print("Fail to infer cell:", infer_cell_x, infer_cell_y)
+        elif action == Action.FAIL_TO_INFER_PIT.value:
+            # infer_cell = self.agent_brain.action_cells[self.current_step - 1]
+            # infer_cell_x, infer_cell_y = infer_cell.x, infer_cell.y
+            print("Fail to infer cell:")
+            # self.sketch_running_screen(Noti.FAIL_TO_INFER_PIT)
         elif action == Action.FAIL_TO_ESCAPE.value:
             print("Agent fail to find way out")
         else:
             print("Unknown action")
         
         self.sketch_running_screen()
-        delay_time = 100
-        if self.map.file_name == MAP_5:
-            delay_time = 50
+        delay_time = 30
+        # if self.map.file_name == MAP_5:
+        #     delay_time = 50
         pygame.time.delay(delay_time)
 
-    def solve(self):
-        agent_cell = self.agent.cell
-        self.agent_brain = AgentBrain(self.agent.cell, self.map.grid_cells)
-        self.agent_brain.action_list = action_list
-        self.action_list = action_list
-        # if agent is at the exit, just climb out
-        if self.agent.cell.x == 0 and self.agent.cell.y == self.agent.cell.map_size - 1:
-            self.action_list.append(Action.TURN_DOWN)
-            self.action_list.append(Action.CLIMB_OUT_OF_THE_CAVE)
-        else:
-            # find the exit cell
-            exit_cell = None
-            for cell in self.map.grid_cells:
-                if cell.x == 0 and cell.y == cell.map_size - 1:
-                    exit_cell = cell
-
-            # find way out for agent
-            if exit_cell.visited:
-                for cell in self.map.grid_cells:
-                    cell.visited = False
-                self.agent_brain.action_list = []
-                self.agent_brain.find_exit()
-                # self.action_list.extend(self.agent_brain.action_list)
-                # self.action_list.append(Action.TURN_DOWN)
-                # self.action_list.append(Action.CLIMB_OUT_OF_THE_CAVE)
-            # if exit cell has not been visited before => can not go to exit cell
-            # else:
-                # self.action_list.append(Action.FAIL_TO_ESCAPE)
-
-        # reset the visited list to render in UI later
-        for cell in self.map.grid_cells:
-            cell.visited = False
-        agent_cell.visited = True
-        
-        # print(f'ACTION LIST: {self.action_list}')
-        # self.state = "show_result"
+    def solve(self, map, agent_current_cell):
+        controller = Controller(map, agent_current_cell)
+        controller.explore_world()
+        self.action_list = controller.action_list
+        # print(self.action_list)
 
     def sketch_map_select(self):
         self.screen.fill(pygame.Color('White'))
@@ -397,7 +243,7 @@ class Game:
         text = self.font_title.render("Wumpus World", True, (23, 127, 117))
         text_rect = text.get_rect()
         text_rect.center = (
-            WINDOW_WIDTH // 2 + CELL_SIZE * 5,
+            WINDOW_WIDTH // 2 + CELL_SIZE * 6,
             WINDOW_HEIGHT // 12,
         )
         self.screen.blit(text, text_rect)
@@ -408,7 +254,7 @@ class Game:
         self.sketch_map_select()
         self.sketch_footer_select()
         self.sketch_title()
-        pygame.draw.line(self.screen, pygame.Color('Black'), (CELL_SIZE*10.5, 0), (CELL_SIZE*10.5, WINDOW_HEIGHT), 2)
+        pygame.draw.line(self.screen, pygame.Color('Black'), (CELL_SIZE*11.5, 0), (CELL_SIZE*11.5, WINDOW_HEIGHT), 2)
     
     def sketch_score(self):
         score = self.agent.score
@@ -417,7 +263,7 @@ class Game:
         )
         score_rect = score_text.get_rect()
         score_rect.center = (
-            WINDOW_WIDTH // 2 + CELL_SIZE * 5,
+            WINDOW_WIDTH // 2 + CELL_SIZE * 6,
             WINDOW_HEIGHT // 5,
         )
         self.screen.blit(score_text, score_rect)
@@ -427,7 +273,7 @@ class Game:
         gold_text = self.font.render("Gold collected: " + str(gold), True, (0, 0, 0))
         gold_rect = gold_text.get_rect()
         gold_rect.center = (
-            WINDOW_WIDTH // 2 + CELL_SIZE * 5,
+            WINDOW_WIDTH // 2 + CELL_SIZE * 6,
             WINDOW_HEIGHT // 4,
         )
         self.screen.blit(gold_text, gold_rect)
@@ -459,34 +305,38 @@ class Game:
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.map1.colour, self.map2.colour, self.map3.colour, self.map4.colour, self.map5.colour, self.button_reset.colour,self.button_step.colour,self.button_play.colour, self.button_pause.colour = WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE
             if self.map1.isOver(pos):
-                self.map = Map(MAP_1)
+                self.map = Map_UI(MAP_1)          
+                        
+                map = Map_ALGO(MAP_1)
                 self.map_size = self.map.map_size
-                self.agent.cell = self.map.get_agent_cell()
+                self.agent.current_cell = self.map.get_agent_cell()
+                self.agent.current_cell.visited = True
                 self.agent.map_size = self.map.map_size
-                self.solve()
-                # print(self.action_list)
-                print(Action.TURN_LEFT.value)
+
+                self.solve(map.map, map.get_agent_cell())
+                print('Map 1 solving')
                 self.state = "running"
+                
             elif self.map2.isOver(pos):
-                self.map = Map(MAP_2)
+                self.map = Map_UI(MAP_2)
                 self.map_size = self.map.map_size
-                self.agent.cell = self.map.get_agent_cell()
+                self.agent.current_cell = self.map.get_agent_cell()
                 self.agent.map_size = self.map.map_size
                 self.state = "running"
             elif self.map3.isOver(pos):
-                self.map = Map(MAP_3)
+                self.map = Map_UI(MAP_3)
                 self.map_size = self.map.map_size
                 self.agent.cell = self.map.get_agent_cell()
                 self.agent.map_size = self.map.map_size
                 self.state = "running"
             elif self.map4.isOver(pos):
-                self.map = Map(MAP_4)
+                self.map = Map_UI(MAP_4)
                 self.map_size = self.map.map_size
                 self.agent.cell = self.map.get_agent_cell()
                 self.agent.map_size = self.map.map_size
                 self.state = "running"
             elif self.map5.isOver(pos):
-                self.map = Map(MAP_5)
+                self.map = Map_UI(MAP_5)
                 self.map_size = self.map.map_size
                 self.agent.cell = self.map.get_agent_cell()
                 self.agent.map_size = self.map.map_size
@@ -502,3 +352,105 @@ class Game:
             elif self.button_pause.isOver(pos):
                 self.is_playing = False 
                 self.is_step = False    
+    
+    def sketch_noti(self, noti_type: Noti):
+        if noti_type == Noti.KILL_WUMPUS:
+            text = self.font.render("KILL WUMPUS !", True, (23, 127, 117))
+            img = pygame.image.load(WUMPUS_IMG).convert_alpha()
+        elif noti_type == Noti.DETECT_PIT:
+            text = self.font.render("DETECT PIT !", True, (23, 127, 117))
+            img = pygame.image.load(PIT_IMG).convert_alpha()
+        elif noti_type == Noti.COLLECT_GOLD:
+            text = self.font.render("COLLECT GOLD !: +1000", True, (23, 127, 117))
+            img = pygame.image.load(CHEST_IMG).convert_alpha()
+        elif noti_type == Noti.SHOOT_ARROW:
+            text = self.font.render("SHOOT ARROW !: -100", True, (23, 127, 117))
+            img = pygame.image.load(ARROW_RIGHT_IMG).convert_alpha()
+        elif noti_type == Noti.PERCEIVE_BREEZE:
+            text = self.font.render("PERCEIVE BREEZE !", True, (23, 127, 117))
+            img = pygame.image.load(BREEZE_IMG).convert_alpha()
+        elif noti_type == Noti.PERCEIVE_STENCH:
+            text = self.font.render("PERCEIVE STENCH !", True, (23, 127, 117))
+            img = pygame.image.load(STENCH_IMG).convert_alpha()
+        elif noti_type == Noti.DETECT_WUMPUS:
+            text = self.font.render("DETECT WUMPUS !", True, (23, 127, 117))
+            img = pygame.image.load(WUMPUS_IMG).convert_alpha()
+        elif noti_type == Noti.KILL_BY_PIT:
+            text = self.font.render("KILLED BY PIT !", True, (217, 30, 24))
+            img = pygame.image.load(PIT).convert_alpha()
+        elif noti_type == Noti.CLIMB_OUT_OF_THE_CAVE:
+            text = self.font.render("CLIMB OUT OF THE CAVE !", True, (23, 127, 117))
+            img = pygame.image.load(STENCH_IMG).convert_alpha()
+
+# Noti.KILL_BY_PIT
+# Noti.CLIMB_OUT_OF_THE_CAVE
+# Noti.DETECT_WUMPUS
+# Noti.DETECT_NO_PIT
+# Noti.DETECT_NO_WUMPUS
+
+        # Show text Noti
+        text_rect = text.get_rect()
+        text_rect.center = (
+            WINDOW_WIDTH // 2 + CELL_SIZE * 6,
+            WINDOW_HEIGHT // 3.5,
+        )
+        self.screen.blit(text, text_rect)
+        # Show image
+        img = pygame.transform.scale(img, (CELL_SIZE, CELL_SIZE))
+        self.screen.blit(
+            img,
+            (
+                WINDOW_WIDTH // 2 + CELL_SIZE * 5.5,
+                WINDOW_HEIGHT // 3,
+            ),
+        )
+        pygame.display.update()
+        pygame.time.delay(1000)
+
+    def sketch_success_screen(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        background = pygame.image.load(SUCCESS_IMAGE).convert()
+        background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.screen.blit(background, (0, 0))
+
+        text = self.font_title.render("SUCCESSFUL!!!", True, (0, 0, 0))
+        text_rect = text.get_rect()
+        text_rect.center = (WINDOW_WIDTH // 2, 50)
+        self.screen.blit(text, text_rect)
+
+        score = self.agent.score
+        text = self.font_score.render("Your score: " + str(score), True, (0, 0, 0))
+        text_rect.center = (WINDOW_WIDTH // 2 + 80, 150)
+        self.screen.blit(text, text_rect)
+
+        pygame.display.update()
+        pygame.time.delay(3000)
+        self.state = "menu"
+
+    def sketch_failed_screen(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        background = pygame.image.load(FAILED_IMAGE).convert()
+        background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.screen.blit(background, (0, 0))
+
+        text = self.font_title.render("FAILED !!!", True, (255, 255, 255))
+        text_rect = text.get_rect()
+        text_rect.center = (WINDOW_WIDTH // 2, 50)
+        self.screen.blit(text, text_rect)
+
+        text = self.font.render("Try to solve again :(", True, (255, 255, 255))
+        text_rect.center = (WINDOW_WIDTH // 2, 150)
+        self.screen.blit(text, text_rect)
+
+        pygame.display.update()
+        pygame.time.delay(3000)
+        self.state = "menu"
+    

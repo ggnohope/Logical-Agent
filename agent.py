@@ -25,7 +25,7 @@ class Agent:
         for neighbor in neighbors:
             converted_pos_neighbors.append(neighbor.get_converted_pos())
 
-        if self.current_cell.attributes["breeze"] == True:
+        if self.current_cell.attribute_imgs["breeze"] == True:
             for converted_pos_neighbor in converted_pos_neighbors:
                 temp_kb = kb.get_clauses()
                 temp_kb.append([(-1) * (PIT + converted_pos_neighbor)])
@@ -46,7 +46,7 @@ class Agent:
                         action_list.append(FAIL_TO_INFER_PIT)
                         remove_list.append(converted_pos_neighbor)
 
-        if self.current_cell.attributes["stench"] == True:
+        if self.current_cell.attribute_imgs["stench"] == True:
             for converted_pos_neighbor in converted_pos_neighbors:
                 temp_kb = kb.get_clauses()
                 temp_kb.append([(WUMPUS + converted_pos_neighbor) * (-1)])
@@ -91,7 +91,7 @@ class Agent:
                         if converted_pos_neighbor not in remove_list:
                             remove_list.append(converted_pos_neighbor)
             
-            if self.current_cell.attributes["stench"] != True:
+            if self.current_cell.attribute_imgs["stench"] != True:
                 if [STENCH + self.current_cell.get_converted_pos()] in kb.clauses:
                     kb.clauses.remove([STENCH + self.current_cell.get_converted_pos()])
                 kb.add_clause([(STENCH + self.current_cell.get_converted_pos()) * (-1)])
@@ -118,31 +118,36 @@ class Agent:
 
     def move_up(self, map):
         i = self.current_cell.get_converted_pos()
-
-        map.map[i].attributes["agent"] = False
-        map.map[i - 10].attributes["agent"] = True
+        map.map[i - 10].attribute_imgs["agent"] = map.map[i].attribute_imgs["agent"]
+        map.map[i].attribute_imgs["agent"] = None
         self.current_cell = map.map[i - 10]
+        self.current_cell.visited = True
+        self.score -= 10
 
+        
     def move_down(self, map):
         i = self.current_cell.get_converted_pos()
-
-        map.map[i].attributes["agent"] = False
-        map.map[i + 10].attributes["agent"] = True
+        map.map[i + 10].attribute_imgs["agent"] = map.map[i].attribute_imgs["agent"]
+        map.map[i].attribute_imgs["agent"] = None
         self.current_cell = map.map[i + 10]
+        self.current_cell.visited = True
+        self.score -= 10
 
     def move_right(self, map):
         i = self.current_cell.get_converted_pos()
-
-        map.map[i].attributes["agent"] = False
-        map.map[i + 1].attributes["agent"] = True
+        map.map[i + 1].attribute_imgs["agent"] = map.map[i].attribute_imgs["agent"]
+        map.map[i].attribute_imgs["agent"] = None
         self.current_cell = map.map[i + 1]
+        self.current_cell.visited = True
+        self.score -= 10
 
     def move_left(self, map):
         i = self.current_cell.get_converted_pos()
-
-        map.map[i].attributes["agent"] = False
-        map.map[i - 1].attributes["agent"] = True
+        map.map[i - 1].attribute_imgs["agent"] = map.map[i].attribute_imgs["agent"]
+        map.map[i].attribute_imgs["agent"] = None
         self.current_cell = map.map[i - 1]
+        self.current_cell.visited = True
+        self.score -= 10
 
     def move_backward(self, map, action_list):
         if self.direction == TURN_UP:
@@ -165,83 +170,90 @@ class Agent:
     def back_up(self, map):
         i = self.current_cell.get_converted_pos()
 
-        map.map[i].attributes["agent"] = False
-        map.map[i + 10].attributes["agent"] = True
+        map.map[i].attribute_imgs["agent"] = False
+        map.map[i + 10].attribute_imgs["agent"] = True
         self.current_cell = map.map[i + 10]
 
     def back_down(self, map):
         i = self.current_cell.get_converted_pos()
 
-        map.map[i].attributes["agent"] = False
-        map.map[i - 10].attributes["agent"] = True
+        map.map[i].attribute_imgs["agent"] = False
+        map.map[i - 10].attribute_imgs["agent"] = True
         self.current_cell = map.map[i - 10]
 
     def back_right(self, map):
         i = self.current_cell.get_converted_pos()
 
-        map.map[i].attributes["agent"] = False
-        map.map[i - 1].attributes["agent"] = True
+        map.map[i].attribute_imgs["agent"] = False
+        map.map[i - 1].attribute_imgs["agent"] = True
         self.current_cell = map.map[i - 1]
 
     def back_left(self, map):
         i = self.current_cell.get_converted_pos()
 
-        map.map[i].attributes["agent"] = False
-        map.map[i + 1].attributes["agent"] = True
+        map.map[i].attribute_imgs["agent"] = False
+        map.map[i + 1].attribute_imgs["agent"] = True
         self.current_cell = map.map[i + 1]
 
-    # def turn_up(self):
-    #     self.cell.img_list["agent"] = pygame.image.load(AGENT_UP_IMG).convert_alpha()
-    #     self.direction = TURN_UP
+    def turn_up(self):
+        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_DOWN_IMG).convert_alpha()
+        self.direction = TURN_UP
 
-    # def turn_down(self):
-    #     self.cell.img_list["agent"] = pygame.image.load(AGENT_DOWN_IMG).convert_alpha()
-    #     self.direction = TURN_DOWN
+    def turn_down(self):
+        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_UP_IMG).convert_alpha()
+        self.direction = TURN_DOWN
 
-    # def turn_left(self):
-    #     self.cell.img_list["agent"] = pygame.image.load(AGENT_LEFT_IMG).convert_alpha()
-    #     self.direction = TURN_LEFT
+    def turn_left(self):
+        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_LEFT_IMG).convert_alpha()
+        self.direction = TURN_LEFT
 
-    # def turn_right(self):
-    #     self.cell.img_list["agent"] = pygame.image.load(AGENT_RIGHT_IMG).convert_alpha()
-    #     self.direction = TURN_RIGHT
+    def turn_right(self):
+        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_RIGHT_IMG).convert_alpha()
+        self.direction = TURN_RIGHT
 
-    # def shoot_arrow(self, grid_cells: list):
-    #     if self.direction == TURN_UP:
-    #         arrow_cell = self.cell.check_cell(self.cell.x, self.cell.y - 1, grid_cells)
-    #         arrow_cell.img_list["arrow"] = pygame.image.load(
-    #             ARROW_UP_IMG
-    #         ).convert_alpha()
-    #     elif self.direction == TURN_DOWN:
-    #         arrow_cell = self.cell.check_cell(self.cell.x, self.cell.y + 1, grid_cells)
-    #         arrow_cell.img_list["arrow"] = pygame.image.load(
-    #             ARROW_DOWN_IMG
-    #         ).convert_alpha()
-    #     elif self.direction == TURN_LEFT:
-    #         arrow_cell = self.cell.check_cell(self.cell.x - 1, self.cell.y, grid_cells)
-    #         arrow_cell.img_list["arrow"] = pygame.image.load(
-    #             ARROW_LEFT_IMG
-    #         ).convert_alpha()
-    #     elif self.direction == TURN_RIGHT:
-    #         arrow_cell = self.cell.check_cell(self.cell.x + 1, self.cell.y, grid_cells)
-    #         arrow_cell.img_list["arrow"] = pygame.image.load(
-    #             ARROW_RIGHT_IMG
-    #         ).convert_alpha()
+    def shoot_arrow(self, grid_cells: list):
+        if self.direction == TURN_DOWN:
+            arrow_cell = self.current_cell.valid_cell(self.current_cell.x, self.current_cell.y - 1, grid_cells)
+            arrow_cell.attribute_imgs["arrow"] = pygame.image.load(
+                ARROW_UP_IMG
+            ).convert_alpha()
+        elif self.direction == TURN_UP:
+            # print(f'Current arrow shoot{self.current_cell.x, self.current_cell.y+1} --------------------')
+            arrow_cell = self.current_cell.valid_cell(self.current_cell.x, self.current_cell.y + 1, grid_cells)
+            # print(f'{arrow_cell.content}')
+            # i = 0
+            # for cell in grid_cells:
+            #     print(f'{i}: {cell.content}')
+            #     if i % 10 == 0: print('\n')
+            #     i += 1
+            arrow_cell.attribute_imgs["arrow"] = pygame.image.load(
+                ARROW_DOWN_IMG
+            ).convert_alpha()
+        elif self.direction == TURN_LEFT:
+            arrow_cell = self.current_cell.valid_cell(self.current_cell.x - 1, self.current_cell.y, grid_cells)
+            arrow_cell.attribute_imgs["arrow"] = pygame.image.load(
+                ARROW_LEFT_IMG
+            ).convert_alpha()
+        elif self.direction == TURN_RIGHT:
+            arrow_cell = self.current_cell.valid_cell(self.current_cell.x + 1, self.current_cell.y, grid_cells)
+            arrow_cell.attribute_imgs["arrow"] = pygame.image.load(
+                ARROW_RIGHT_IMG
+            ).convert_alpha()
 
-    #     self.score -= 100
+        self.score -= 100
 
-    #     return arrow_cell
+        return arrow_cell
 
-    # def check_collide_pit_or_wumpus(self):
-    #     if "W" in self.cell.type or "P" in self.cell.type:
-    #         self.score -= 10000
-    #         return True
+    def check_collide_pit_or_wumpus(self):
+        if "W" in self.current_cell.content or "P" in self.current_cell.content:
+            self.score -= 10000
+            return True
 
-    # def collect_gold(self):
-    #     self.cell.type = self.cell.type.replace("G", "")
-    #     self.cell.img_list["gold"] = None
-    #     self.gold += 1
-    #     self.score += 1000
+    def collect_gold(self):
+        self.current_cell.content = self.current_cell.content.replace("G", "")
+        self.current_cell.attribute_imgs["gold"] = None
+        self.gold += 1
+        self.score += 1000
 
-    # def climb_out(self):
-    #     self.score += 10
+    def climb_out(self):
+        self.score += 10

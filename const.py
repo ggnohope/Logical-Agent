@@ -1,5 +1,5 @@
 # Screen window
-WINDOW_WIDTH = 1200
+WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 800
 
 # Title

@@ -219,15 +219,15 @@ class Controller:
     def find_exit(self):
         pass
 
-import pygame
-pygame.init()
-pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+# import pygame
+# pygame.init()
+# pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
-map = Map_ALGO("assets\inputs\map_1.txt")
-agent = Agent()
+# map = Map_ALGO(MAP_1)
+# agent = Agent()
 
-agent.current_cell = map.get_agent_cell()
-agent.current_cell.visited = True
-controller = Controller(map.map, agent.current_cell)
-controller.explore_world()
-print(controller.action_list)
+# agent.current_cell = map.get_agent_cell()
+# agent.current_cell.visited = True
+# controller = Controller(map.map, agent.current_cell)
+# controller.explore_world()
+# print(controller.action_list)

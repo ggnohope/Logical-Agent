@@ -27,11 +27,9 @@ class Cell_UI:
         if self.content == "-":
             return
         for c in self.content:
-            # print(c)
             if c == "A":
                 img = pygame.image.load(AGENT_RIGHT_IMG).convert_alpha()
                 self.attribute_imgs["agent"] = img
-                print(f'c==A {self.attribute_imgs["agent"]}')
             elif c == "G":
                 img = pygame.image.load(CHEST_IMG).convert_alpha()
                 self.attribute_imgs["gold"] = img
@@ -55,7 +53,6 @@ class Cell_UI:
 
         if x < 0 or y < 0 or x > self.map_size or y > self.map_size:
             return False
-        # print(f'x: {x}, y: {y} find_index(x, y): {find_index(x, y)}')
         return grid_cells[find_index(x, y)]
 
     def get_neighbors(self, grid_cells: list):
@@ -231,7 +228,6 @@ class Cell_UI:
                 ),
             )
         if self.attribute_imgs["agent"]:
-            # print(self.attribute_imgs["agent"])
             self.attribute_imgs["agent"] = pygame.transform.scale(
                 self.attribute_imgs["agent"], (CELL_SIZE, CELL_SIZE)
             )
@@ -299,6 +295,8 @@ class Cell_ALGO:
         self.visited = False
         self.content = content
         self.parent = None
+        self.infered = False
+        self.is_safe = False
         self.attributes = { #use for run algorithms
             "arrow": False,
             "gold": False,

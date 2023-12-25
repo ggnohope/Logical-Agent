@@ -9,7 +9,6 @@ from map import *
 from noti import Noti
 from buttons import *
 from action import *
-from agent_brain import *
 # from test import action_list
 
 from controller import *
@@ -119,7 +118,7 @@ class Game:
 
         # return if finish the action`` list
         if self.current_step == len(self.action_list):
-            if self.action_list[-1] == Action.CLIMB_OUT_OF_THE_CAVE.value:
+            if self.action_list[-1] == ESCAPE_SUCCESS:
                 self.state = "success"
             else:
                 self.state = "failed"
@@ -160,17 +159,11 @@ class Game:
         elif action == Action.PERCEIVE_STENCH.value:
             self.sketch_running_screen(Noti.PERCEIVE_STENCH)
         elif action == Action.SHOOT.value:
-            # for cell in self.map.map:
-            #     print(cell.content)
             arrow_cell = self.agent.shoot_arrow(self.map.map)
-            print(f'Arrow Cell: {arrow_cell.content}')
             self.sketch_running_screen(Noti.SHOOT_ARROW)
-            # if "W" in arrow_cell.content:
-                # remove Wumpus
             arrow_cell.content = arrow_cell.content.replace("W", "")
             arrow_cell.attribute_imgs["wumpus"] = None
             arrow_cell.visited = True
-            # remove stench in neighbor cells
             adjacents = arrow_cell.get_neighbors(self.map.map)
             for adjacent in adjacents:
                 adjacent.attribute_imgs["stench"] = None
@@ -189,7 +182,6 @@ class Game:
             cell_ahead.visited = True
             self.sketch_running_screen(Noti.DETECT_PIT)
         elif action == Action.DETECT_WUMPUS.value:
-            print('Detect wumpus')
             self.sketch_running_screen(Noti.DETECT_WUMPUS)
         elif action == Action.DETECT_NO_PIT.value:
             cell_ahead.visited = True
@@ -221,9 +213,10 @@ class Game:
 
     def solve(self, map, agent_current_cell):
         controller = Controller(map, agent_current_cell)
-        controller.explore_world()
+        if controller.explore_world():
+            if controller.find_exit():
+                controller.action_list.append(ESCAPE_SUCCESS)
         self.action_list = controller.action_list
-        # print(self.action_list)
 
     def sketch_map_select(self):
         self.screen.fill(pygame.Color('White'))
@@ -381,12 +374,6 @@ class Game:
         elif noti_type == Noti.CLIMB_OUT_OF_THE_CAVE:
             text = self.font.render("CLIMB OUT OF THE CAVE !", True, (23, 127, 117))
             img = pygame.image.load(STENCH_IMG).convert_alpha()
-
-# Noti.KILL_BY_PIT
-# Noti.CLIMB_OUT_OF_THE_CAVE
-# Noti.DETECT_WUMPUS
-# Noti.DETECT_NO_PIT
-# Noti.DETECT_NO_WUMPUS
 
         # Show text Noti
         text_rect = text.get_rect()

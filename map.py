@@ -34,9 +34,6 @@ class Map_UI:
 
         self.infer_cell_attribute()
     
-    def remove_wumpus(self, converted_pos):
-        pass
-    
     def get_neighbors(self, cell):
         neighbors = []
         i = self.map_size * (self.map_size - cell.y) + cell.x - 1
@@ -69,14 +66,6 @@ class Map_UI:
                     cell.attribute_imgs["breeze"] = img
                     cell.content = cell.content.replace('-','')
                     cell.content += 'B'
-                    
-        # i = 1
-        # for cell in self.map:
-        #     i += 1
-        #     if i%10 == 0: 
-        #         print('\n')
-        #     print(cell.content, end=',')
-
             
     def draw(self, screen):
         [cell.draw(screen) for cell in self.map]
@@ -130,26 +119,6 @@ class Map_ALGO:
             neighbors.append(self.map[i - 10])
 
         return neighbors
-    
-    def remove_wumpus(self, converted_pos):
-
-        if self.map[converted_pos].attributes["wumpus"] == False:
-            return
-        
-        self.map[converted_pos].attributes["wumpus"] = False
-
-        neighbors = self.get_neighbors(self.map[converted_pos])
-        for neighbor in neighbors:
-            is_delete_stench = True
-            neighbors_of_neighbor = self.get_neighbors(neighbor)
-            if self.map[converted_pos] in neighbors_of_neighbor:
-                neighbors_of_neighbor.remove(self.map[converted_pos])
-            for cell in neighbors_of_neighbor:
-                if cell.attributes["wumpus"] == True:
-                    is_delete_stench = False
-                    break
-            if is_delete_stench:
-                neighbor.attributes["stench"] = False
 
     def infer_cell_attribute(self):
         for cell in self.map:

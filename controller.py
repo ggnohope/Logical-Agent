@@ -73,8 +73,9 @@ class Controller:
                 self.indicate_turn(self.current_cell, neighbor)
                 temp_kb = self.kb.get_clauses()
                 temp_kb.append([(-1) * (PIT + neighbor.get_converted_pos())])
-                solver = SATSolver(temp_kb)
-                if solver.solve() == False:
+                solver = Solver(temp_kb)
+                if solver.is_satisfiable() == False:
+                    neighbor.infered = True
                     self.action_list.append(DETECT_PIT)
                     self.kb.add_clause([PIT + neighbor.get_converted_pos()])
                     if neighbor not in remove_list:
@@ -82,8 +83,9 @@ class Controller:
                 else:
                     temp_kb = self.kb.get_clauses()
                     temp_kb.append([PIT + neighbor.get_converted_pos()])
-                    solver = SATSolver(temp_kb)
-                    if solver.solve() == False:
+                    solver = Solver(temp_kb)
+                    if solver.is_satisfiable() == False:
+                        neighbor.infered = True
                         self.action_list.append(DETECT_NO_PIT)
                         self.kb.add_clause([(-1) * (PIT + neighbor.get_converted_pos())])
                     else:
@@ -96,8 +98,8 @@ class Controller:
                 self.indicate_turn(self.current_cell, neighbor)
                 temp_kb = self.kb.get_clauses()
                 temp_kb.append([(WUMPUS + neighbor.get_converted_pos()) * (-1)])
-                solver = SATSolver(temp_kb)
-                if solver.solve() == False:
+                solver = Solver(temp_kb)
+                if solver.is_satisfiable() == False:
                     self.action_list.append(DETECT_WUMPUS)
                     self.action_list.append(SHOOT_ARROW)
                     self.action_list.append(KILL_WUMPUS)
@@ -114,8 +116,9 @@ class Controller:
                 else:
                     temp_kb = self.kb.get_clauses()
                     temp_kb.append([WUMPUS + neighbor.get_converted_pos()])
-                    solver = SATSolver(temp_kb)
-                    if solver.solve() == False:
+                    solver = Solver(temp_kb)
+                    if solver.is_satisfiable() == False:
+                        neighbor.infered = True
                         self.action_list.append(DETECT_NO_WUMPUS)
                         self.kb.add_clause([(WUMPUS + neighbor.get_converted_pos()) * (-1)])
                     else: # cant infer whether this neighbor cell has wumpus or not, we dont move to this cell
@@ -181,6 +184,8 @@ class Controller:
                 remove_list.append(neighbor)
             elif neighbor.visited == True:
                 remove_list.append(neighbor)
+            elif neighbor.infered == True:
+                remove_list.append(neighbor)
         
         for cell in remove_list:
             neighbors.remove(cell)
@@ -216,18 +221,54 @@ class Controller:
             
         return True
         
+    def backtrace_path(self, cell):
+        if cell.parent == None:
+            return
+        self.backtrace_path(cell.parent)
+        self.indicate_turn(cell.parent, cell)
+        self.action_list.append(MOVE_FORWARD)
+
+    
     def find_exit(self):
-        pass
+        exit_pos = 90
+        if self.grid_cells[exit_pos].visited == False:
+            return False
+        
+        for cell in self.grid_cells:
+            cell.parent = None
+        
+        frontier = []
+        expanded_set = set()
+        frontier.append(self.current_cell)
+        while len(frontier) != 0:
+            current_cell = frontier.pop()
+            expanded_set.add((current_cell.x, current_cell.y))
 
-# import pygame
-# pygame.init()
-# pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+            if current_cell.x == 1 and current_cell.y == 1:
+                self.backtrace_path(current_cell)
+                return True
 
-# map = Map_ALGO(MAP_1)
-# agent = Agent()
+            neighbors = self.get_neighbors(current_cell)
 
-# agent.current_cell = map.get_agent_cell()
-# agent.current_cell.visited = True
-# controller = Controller(map.map, agent.current_cell)
-# controller.explore_world()
-# print(controller.action_list)
+            neighbors = [neighbor for neighbor in neighbors if neighbor.visited and (neighbor.x, neighbor.y) not in expanded_set]
+
+            for neighbor in neighbors:
+                frontier.append(neighbor)
+                neighbor.parent = current_cell
+        
+        return False
+
+import pygame
+pygame.init()
+pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+
+map = Map_ALGO(MAP_1)
+agent = Agent()
+
+agent.current_cell = map.get_agent_cell()
+agent.current_cell.visited = True
+controller = Controller(map.map, agent.current_cell)
+if controller.explore_world():
+    if controller.find_exit():
+        controller.action_list.append(ESCAPE_SUCCESS)
+print(controller.action_list)

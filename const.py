@@ -31,10 +31,10 @@ FONT_STYLE = "./assets/font/Valorax-lg25V.otf"
 
 # Inputs
 MAP_1 = "./assets/inputs/map_1.txt"
-MAP_2 = "./assets/inputs/map_1.txt"
-MAP_3 = "./assets/inputs/map_1.txt"
-MAP_4 = "./assets/inputs/map_1.txt"
-MAP_5 = "./assets/inputs/map_1.txt"
+MAP_2 = "./assets/inputs/map_2.txt"
+MAP_3 = "./assets/inputs/map_3.txt"
+MAP_4 = "./assets/inputs/map_4.txt"
+MAP_5 = "./assets/inputs/map_5.txt"
 
 # Other metrics
 CELL_SIZE = 70

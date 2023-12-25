@@ -1,93 +1,58 @@
-import math
-
 import pygame
-
 from const import *
 
-
-class Cell:
-    def __init__(self, x, y, type: str) -> None:
-        self.x = x
-        self.y = y
+class Cell_UI:
+    def __init__(self, x, y, content: str) -> None:
+        self.x, self.y = x, y
+        self.map_size = 10
         self.visited = False
-        self.type: str = type
-        self.map_size = None
-        self.img_list = {
+        self.content = content
+        self.attribute_imgs = { #use for render ui
             "arrow": None,
             "gold": None,
-            "obstacle": None,  # agent, gold, pit, wumpus
+            "wumpus": None,
+            "pit": None,
             "agent": None,
             "breeze": None,
             "stench": None,
         }
+    
+    def get_converted_pos(self):
+        return (self.x - 1) + 10 * (10 - self.y)
 
-    def init_img_list(self):
-        if self.type == "-":
+    def init_attribute_imgs(self):
+        if self.content == "-":
             return
-        for c in self.type:
+        for c in self.content:
             if c == "A":
                 img = pygame.image.load(AGENT_RIGHT_IMG).convert_alpha()
-                self.img_list["agent"] = img
+                self.attribute_imgs["agent"] = img
             elif c == "G":
                 img = pygame.image.load(CHEST_IMG).convert_alpha()
-                self.img_list["gold"] = img
+                self.attribute_imgs["gold"] = img
             elif c == "P":
                 img = pygame.image.load(PIT_IMG).convert_alpha()
-                self.img_list["obstacle"] = img
+                self.attribute_imgs["pit"] = img
             elif c == "W":
                 img = pygame.image.load(WUMPUS_IMG).convert_alpha()
-                self.img_list["obstacle"] = img
-            elif c == "S":
-                img = pygame.image.load(STENCH_IMG).convert_alpha()
-                self.img_list["stench"] = img
-            elif c == "B":
-                img = pygame.image.load(BREEZE_IMG).convert_alpha()
-                self.img_list["breeze"] = img
-
-    def check_cell(self, x, y, grid_cells: list):
-        if not self.map_size:
-            self.map_size = int(math.sqrt(len(grid_cells)))
-        find_index = lambda x, y: x + y * self.map_size
-
-        if x < 0 or y < 0 or x > self.map_size - 1 or y > self.map_size - 1:
-            return False
-        return grid_cells[find_index(x, y)]
-
-    def get_neighbors(self, grid_cells: list):
-        neighbors = []
-
-        top = self.check_cell(self.x, self.y - 1, grid_cells)
-        bottom = self.check_cell(self.x, self.y + 1, grid_cells)
-        left = self.check_cell(self.x - 1, self.y, grid_cells)
-        right = self.check_cell(self.x + 1, self.y, grid_cells)
-
-        if top:
-            neighbors.append(top)
-        if bottom:
-            neighbors.append(bottom)
-        if left:
-            neighbors.append(left)
-        if right:
-            neighbors.append(right)
-
-        return neighbors
+                self.attribute_imgs["wumpus"] = img
 
     def draw(self, screen):
         x, y = self.x * CELL_SIZE, self.y * CELL_SIZE
 
-        if not self.img_list["arrow"] and not self.visited:
+        if not self.attribute_imgs["arrow"] and not self.visited:
             pygame.draw.rect(
                 screen, pygame.Color(173, 116, 96), (x, y, CELL_SIZE, CELL_SIZE)
             )
-        elif self.img_list["arrow"] and not self.visited:
+        elif self.attribute_imgs["arrow"] and not self.visited:
             pygame.draw.rect(
                 screen, pygame.Color(173, 116, 96), (x, y, CELL_SIZE, CELL_SIZE)
             )
-            self.img_list["arrow"] = pygame.transform.scale(
-                self.img_list["arrow"], (CELL_SIZE, CELL_SIZE)
+            self.attribute_imgs["arrow"] = pygame.transform.scale(
+                self.attribute_imgs["arrow"], (CELL_SIZE, CELL_SIZE)
             )
             screen.blit(
-                self.img_list["arrow"],
+                self.attribute_imgs["arrow"],
                 (
                     self.x * CELL_SIZE,
                     self.y * CELL_SIZE,
@@ -96,7 +61,7 @@ class Cell:
 
             # if the cell containing a arrow has any pit or Wumpus -> set this cell's VISITED = True
             self.visited = True
-            self.img_list["arrow"] = None
+            self.attribute_imgs["arrow"] = None
         elif self.visited:
             pygame.draw.rect(
                 screen, pygame.Color(136, 56, 45), (x, y, CELL_SIZE, CELL_SIZE)
@@ -143,79 +108,113 @@ class Cell:
             screen.blit(exit_sc, exit_rect)
 
     def draw_image_cell(self, screen):
-        if self.type == "-":
+        if self.content == "-":
             return
         breeze_stench_count = 0
-        for c in self.type:
+        for c in self.content:
             if c == "B" or c == "S":
                 breeze_stench_count += 1
 
-        if self.img_list["gold"]:
-            self.img_list["gold"] = pygame.transform.scale(
-                self.img_list["gold"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
+        if self.attribute_imgs["gold"]:
+            self.attribute_imgs["gold"] = pygame.transform.scale(
+                self.attribute_imgs["gold"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
             )
             screen.blit(
-                self.img_list["gold"],
+                self.attribute_imgs["gold"],
                 (
                     self.x * CELL_SIZE + CELL_SIZE // 10,
                     self.y * CELL_SIZE + CELL_SIZE // 10,
                 ),
             )
-        if self.img_list["obstacle"]:
-            self.img_list["obstacle"] = pygame.transform.scale(
-                self.img_list["obstacle"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
+        if self.attribute_imgs["obstacle"]:
+            self.attribute_imgs["obstacle"] = pygame.transform.scale(
+                self.attribute_imgs["obstacle"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
             )
             screen.blit(
-                self.img_list["obstacle"],
+                self.attribute_imgs["obstacle"],
                 (
                     self.x * CELL_SIZE + CELL_SIZE // 10,
                     self.y * CELL_SIZE + CELL_SIZE // 10,
                 ),
             )
-        if self.img_list["agent"]:
-            self.img_list["agent"] = pygame.transform.scale(
-                self.img_list["agent"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
+        if self.attribute_imgs["agent"]:
+            self.attribute_imgs["agent"] = pygame.transform.scale(
+                self.attribute_imgs["agent"], (CELL_SIZE // 1.2, CELL_SIZE // 1.2)
             )
             screen.blit(
-                self.img_list["agent"],
+                self.attribute_imgs["agent"],
                 (
                     self.x * CELL_SIZE + CELL_SIZE // 10,
                     self.y * CELL_SIZE + CELL_SIZE // 10,
                 ),
             )
-        if self.img_list["breeze"]:
-            self.img_list["breeze"] = pygame.transform.scale(
-                self.img_list["breeze"], (CELL_SIZE // breeze_stench_count, CELL_SIZE)
+        if self.attribute_imgs["breeze"]:
+            self.attribute_imgs["breeze"] = pygame.transform.scale(
+                self.attribute_imgs["breeze"], (CELL_SIZE // breeze_stench_count, CELL_SIZE)
             )
             screen.blit(
-                self.img_list["breeze"],
+                self.attribute_imgs["breeze"],
                 (
                     self.x * CELL_SIZE,
                     self.y * CELL_SIZE,
                 ),
             )
-        if self.img_list["stench"]:
+        if self.attribute_imgs["stench"]:
             if breeze_stench_count == 1:
-                self.img_list["stench"] = pygame.transform.scale(
-                    self.img_list["stench"],
+                self.attribute_imgs["stench"] = pygame.transform.scale(
+                    self.attribute_imgs["stench"],
                     (CELL_SIZE // breeze_stench_count, CELL_SIZE),
                 )
                 screen.blit(
-                    self.img_list["stench"],
+                    self.attribute_imgs["stench"],
                     (
                         self.x * CELL_SIZE,
                         self.y * CELL_SIZE,
                     ),
                 )
             elif breeze_stench_count == 2:
-                self.img_list["stench"] = pygame.transform.scale(
-                    self.img_list["stench"],
+                self.attribute_imgs["stench"] = pygame.transform.scale(
+                    self.attribute_imgs["stench"],
                     (CELL_SIZE // breeze_stench_count, CELL_SIZE),
                 )
                 screen.blit(
-                    self.img_list["stench"],
+                    self.attribute_imgs["stench"],
                     (
                         self.x * CELL_SIZE + CELL_SIZE // breeze_stench_count,
                         self.y * CELL_SIZE,
                     ),
                 )
+
+class Cell_ALGO:
+    def __init__(self, x, y, content: str) -> None:
+        self.x = x
+        self.y = y
+        self.map_size = 10
+        self.visited = False
+        self.content = content
+        self.parent = None
+        self.attributes = { #use for run algorithms
+            "arrow": False,
+            "gold": False,
+            "wumpus": False,
+            "pit": False,
+            "agent": False,
+            "breeze": False,
+            "stench": False,
+        } 
+    
+    def get_converted_pos(self):
+        return (self.x - 1) + 10 * (10 - self.y)
+
+    def init_attribute_imgs(self):
+        if self.content == "-":
+            return
+        for c in self.content:
+            if c == "A":
+                self.attributes["agent"] = True
+            elif c == "G":
+                self.attributes["gold"] = True
+            elif c == "P":
+                self.attributes["pit"] = True
+            elif c == "W":
+                self.attributes["wumpus"] = True

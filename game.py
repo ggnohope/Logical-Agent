@@ -49,7 +49,7 @@ class Game:
             if self.state == "menu":
                 self.draw_main_screen()
             elif self.state == "running":
-                self.test_ui()
+                self.solve()
             elif self.state == "success":
                 self.draw_success_screen()
             elif self.state == "failed":
@@ -67,6 +67,10 @@ class Game:
             self.event_mouse_click(event, pos)
 
     def draw_running_screen(self, noti_type: Notification = None):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
         # Draw filter
         pygame.draw.rect(self.screen, pygame.Color('White'), (CELL_SIZE*12, CELL_SIZE*2, WINDOW_WIDTH - CELL_SIZE*12, WINDOW_HEIGHT/4))
 
@@ -164,58 +168,11 @@ class Game:
         self.state = "menu"
     
 
-    def test_ui(self):
+    def solve(self):
         self.agent.cell.visited = True
         self.draw_running_screen()
         
-        # self.draw_layout()
-        # pos = pygame.mouse.get_pos()
-        # for event in pygame.event.get():
-        #     if event.type == pygame.QUIT:
-        #         pygame.quit()
-        #         sys.exit()
-        #     self.event_mouse_motion(event, pos)
-        #     self.event_mouse_click(event, pos)
-
-        if (
-            (self.agent.direction == Direction.UP and self.agent.cell.y > 0)
-            or (self.agent.direction == Direction.DOWN and self.agent.cell.y < 9)
-            or (self.agent.direction == Direction.LEFT and self.agent.cell.x > 0)
-            or (self.agent.direction == Direction.RIGHT and self.agent.cell.x < 9)
-        ):
-            arrow_cell = self.agent.shoot_arrow(self.map.grid_cells)
-            self.draw_running_screen(Notification.SHOOT_ARROW)
-
-        if "G" in self.agent.cell.type:
-            self.draw_running_screen()
-            self.draw_running_screen(Notification.COLLECT_GOLD)
-            self.agent.collect_gold()
-
-        direc = random.choice(list(Direction))
-        if (
-            (direc == Direction.UP and self.agent.cell.y > 0)
-            or (direc == Direction.DOWN and self.agent.cell.y < 9)
-            or (direc == Direction.LEFT and self.agent.cell.x > 0)
-            or (direc == Direction.RIGHT and self.agent.cell.y < 9)
-        ):
-            if direc == Direction.UP:
-                self.agent.turn_up()
-                self.draw_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-            if direc == Direction.DOWN:
-                self.agent.turn_down()
-                self.draw_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-            if direc == Direction.LEFT:
-                self.agent.turn_left()
-                self.draw_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-            if direc == Direction.RIGHT:
-                self.agent.turn_right()
-                self.draw_running_screen()
-                self.agent.move_forward(self.map.grid_cells)
-
-        pygame.time.delay(500)
+        
 
     def sketch_map_select(self):
         self.screen.fill(pygame.Color('White'))

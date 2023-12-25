@@ -1,15 +1,12 @@
-from cell import Cell
+from cell import *
 from const import *
+import pygame
 
-
-class Map:
+class Map_UI:
     def __init__(self, file_name) -> None:
-        self.map_size = 10  # 10x10
-        self.cell_size = CELL_SIZE
-        self.pit_discovered = []
-        self.cell_discovered = []
+        self.map_size = 10
         self.file_name = file_name
-        self.grid_cells = []
+        self.map = []
 
         self.init_map()
 
@@ -20,55 +17,125 @@ class Map:
                 line = file.readline()
                 line.strip()
                 cells = line.split(".")
-
                 for j, cell in enumerate(cells):
                     if cell == "A":
-                        cell = Cell(j, i, "A")
+                        cell = Cell_UI(j + 1, self.map_size - i, "A") # since (1, 1) is the coord of bottom left
                     elif cell == "P":
-                        cell = Cell(j, i, "P")
+                        cell = Cell_UI(j + 1, self.map_size - i, "P")
                     elif cell == "W":
-                        cell = Cell(j, i, "W")
+                        cell = Cell_UI(j + 1, self.map_size - i, "W")
                     elif cell == "G":
-                        cell = Cell(j, i, "G")
+                        cell = Cell_UI(j + 1, self.map_size - i, "G")
                     else:
-                        cell = Cell(j, i, "-")
+                        cell = Cell_UI(j + 1, self.map_size - i, "-")
 
-                    self.grid_cells.append(cell)
+                    self.map.append(cell)
 
-        self.init_breeze_stench()
-        for cell in self.grid_cells:
-            cell.init_img_list()
+        self.infer_cell_attribute()
+    
+    def remove_wumpus(self, converted_pos):
+        pass
 
-    def init_breeze_stench(self):
-        for cell in self.grid_cells:
-            neighbors = cell.get_neighbors(self.grid_cells)
-            neighbor_types = {"P": False, "W": False}
-            if any("P" in neighbor.type for neighbor in neighbors):
-                neighbor_types["P"] = True
-            if any("W" in neighbor.type for neighbor in neighbors):
-                neighbor_types["W"] = True
+    def infer_cell_attribute(self):
+        for cell in self.map:
+            cell.init_attribute_imgs()
 
-            if (
-                cell.type == "A"
-                or cell.type == "G"
-                or cell.type == "P"
-                or cell.type == "W"
-            ):
-                cell.type += "B" if neighbor_types["P"] == True else ""
-                cell.type += "S" if neighbor_types["W"] == True else ""
-            elif cell.type == "-":
-                cell.type = ""
-                cell.type += "B" if neighbor_types["P"] == True else ""
-                cell.type += "S" if neighbor_types["W"] == True else ""
-                if cell.type == "":
-                    cell.type = "-"
-
-        # After this function, a type of any cell can be: (A,P,W,G,-,B,S,AB,AS,ABS,GB,GS,GBS,PB,PS,PBS,WB,WS,WBS,BS)
-
+        for cell in self.map:
+            neighbors = self.get_neighbors(cell)
+            for neighbor in neighbors:
+                if neighbor.attribute_imgs["wumpus"] != None:
+                    img = pygame.image.load(STENCH_IMG).convert_alpha()
+                    cell.attribute_imgs["stench"] = img
+                if neighbor.attribute_imgs["pit"] != None:
+                    img = pygame.image.load(BREEZE_IMG).convert_alpha()
+                    cell.attribute_imgs["breeze"] = img
+            
     def draw(self, screen):
-        [cell.draw(screen) for cell in self.grid_cells]
+        [cell.draw(screen) for cell in self.map]
 
     def get_agent_cell(self):
-        for cell in self.grid_cells:
-            if "A" in cell.type:
+        for cell in self.map:
+            if cell.content == "A":
+                return cell
+            
+class Map_ALGO:
+    def __init__(self, file_name) -> None:
+        self.map_size = 10
+        self.file_name = file_name
+        self.map = []
+
+        self.init_map()
+
+    def init_map(self):
+        with open(self.file_name, "r") as file:
+            self.map_size = int(file.readline())
+            for i in range(self.map_size):
+                line = file.readline()
+                line.strip()
+                cells = line.split(".")
+                for j, cell in enumerate(cells):
+                    if cell == "A":
+                        cell = Cell_ALGO(j + 1, self.map_size - i, "A") # since (1, 1) is the coord of bottom left
+                    elif cell == "P":
+                        cell = Cell_ALGO(j + 1, self.map_size - i, "P")
+                    elif cell == "W":
+                        cell = Cell_ALGO(j + 1, self.map_size - i, "W")
+                    elif cell == "G":
+                        cell = Cell_ALGO(j + 1, self.map_size - i, "G")
+                    else:
+                        cell = Cell_ALGO(j + 1, self.map_size - i, "-")
+
+                    self.map.append(cell)
+
+        self.infer_cell_attribute()
+
+    def get_neighbors(self, cell):
+        neighbors = []
+        i = self.map_size * (self.map_size - cell.y) + cell.x - 1
+        if cell.x > 1:
+            neighbors.append(self.map[i - 1])
+        if cell.x < 10:
+            neighbors.append(self.map[i + 1])
+        if cell.y > 1:
+            neighbors.append(self.map[i + 10])
+        if cell.y < 10:
+            neighbors.append(self.map[i - 10])
+
+        return neighbors
+    
+    def remove_wumpus(self, converted_pos):
+
+        if self.map[converted_pos].attributes["wumpus"] == False:
+            return
+        
+        self.map[converted_pos].attributes["wumpus"] = False
+
+        neighbors = self.get_neighbors(self.map[converted_pos])
+        for neighbor in neighbors:
+            is_delete_stench = True
+            neighbors_of_neighbor = self.get_neighbors(neighbor)
+            if self.map[converted_pos] in neighbors_of_neighbor:
+                neighbors_of_neighbor.remove(self.map[converted_pos])
+            for cell in neighbors_of_neighbor:
+                if cell.attributes["wumpus"] == True:
+                    is_delete_stench = False
+                    break
+            if is_delete_stench:
+                neighbor.attributes["stench"] = False
+
+    def infer_cell_attribute(self):
+        for cell in self.map:
+            cell.init_attribute_imgs()
+
+        for cell in self.map:
+            neighbors = self.get_neighbors(cell)
+            for neighbor in neighbors:
+                if neighbor.attributes["wumpus"] != False:
+                    cell.attributes["stench"] = True
+                if neighbor.attributes["pit"] != False:
+                    cell.attributes["breeze"] = True
+
+    def get_agent_cell(self):
+        for cell in self.map:
+            if cell.content == "A":
                 return cell

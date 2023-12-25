@@ -11,6 +11,8 @@ WUMPUS_IMG = "./assets/images/wumpus.png"
 CHEST_IMG = "./assets/images/chest.png"
 BREEZE_IMG = "./assets/images/breeze.png"
 STENCH_IMG = "./assets/images/stench.png"
+WALL_IMG = "./assets/images/wall.png"
+WALL_OUTLINE_IMG = "./assets/images/wall_outline.png"
 
 # Agent images
 AGENT_RIGHT_IMG = "./assets/images/agent-right.png"

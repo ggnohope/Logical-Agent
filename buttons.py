@@ -13,7 +13,7 @@ class Buttons():
         self.height = height
         self.text = text
 
-    def draw_button(self, outline = None):
+    def sketch_button(self, outline = None):
         if outline:
             pygame.draw.rect(self.app.screen, outline, (self.x-2, self.y-2, self.width+4, self.height+4), 0)
         pygame.draw.rect(self.app.screen, self.colour, (self.x, self.y, self.width, self.height), 0)

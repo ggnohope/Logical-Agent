@@ -27,6 +27,7 @@ class Game:
         self.font_title = pygame.font.Font(FONT_STYLE, 30)
 
         self.map = None
+        self.mapName = 0
         self.map_size = None
 
         self.state = "menu"
@@ -120,8 +121,10 @@ class Game:
         if self.current_step == len(self.action_list):
             if self.action_list[-1] == ESCAPE_SUCCESS:
                 self.state = "success"
+                self.reset(None)
             else:
                 self.state = "failed"
+                self.reset(None)
             return
 
         i = self.agent.current_cell.get_converted_pos()
@@ -136,18 +139,22 @@ class Game:
                 
         # get action
         action = self.action_list[self.current_step]
+        action2 = None
+        if(self.current_step + 1 < len(self.action_list)):
+            action2 = self.action_list[self.current_step+1]
+            
         # increase the step
         if len(self.action_list) > self.current_step:
             self.current_step += 1
 
         # print(action)
-        if action == Action.TURN_LEFT.value:
+        if action == Action.TURN_LEFT.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
             self.agent.turn_left()
-        elif action == Action.TURN_RIGHT.value:
+        elif action == Action.TURN_RIGHT.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
             self.agent.turn_right()
-        elif action == Action.TURN_UP.value:
+        elif action == Action.TURN_UP.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
             self.agent.turn_up()
-        elif action == Action.TURN_DOWN.value:
+        elif action == Action.TURN_DOWN.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
             self.agent.turn_down()
         elif action == Action.MOVE_FORWARD.value:
             self.agent.move_forward(self.map)
@@ -182,6 +189,8 @@ class Game:
             cell_ahead.visited = True
             self.sketch_running_screen(Noti.DETECT_PIT)
         elif action == Action.DETECT_WUMPUS.value:
+            print('Detect wumpus')
+            cell_ahead.visited = True
             self.sketch_running_screen(Noti.DETECT_WUMPUS)
         elif action == Action.DETECT_NO_PIT.value:
             cell_ahead.visited = True
@@ -298,44 +307,74 @@ class Game:
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.map1.colour, self.map2.colour, self.map3.colour, self.map4.colour, self.map5.colour, self.button_reset.colour,self.button_step.colour,self.button_play.colour, self.button_pause.colour = WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE
             if self.map1.isOver(pos):
-                self.map = Map_UI(MAP_1)          
-                        
+                self.mapName = MAP_1
+                self.map = Map_UI(MAP_1)      
                 map = Map_ALGO(MAP_1)
                 self.map_size = self.map.map_size
                 self.agent.current_cell = self.map.get_agent_cell()
                 self.agent.current_cell.visited = True
                 self.agent.map_size = self.map.map_size
-
                 self.solve(map.map, map.get_agent_cell())
-                print('Map 1 solving')
                 self.state = "running"
                 
             elif self.map2.isOver(pos):
-                self.map = Map_UI(MAP_2)
+                self.mapName = MAP_2
+                self.map = Map_UI(MAP_2)      
+                map = Map_ALGO(MAP_2)
                 self.map_size = self.map.map_size
                 self.agent.current_cell = self.map.get_agent_cell()
+                self.agent.current_cell.visited = True
                 self.agent.map_size = self.map.map_size
+                self.solve(map.map, map.get_agent_cell())
                 self.state = "running"
             elif self.map3.isOver(pos):
-                self.map = Map_UI(MAP_3)
+                self.mapName = MAP_3
+                self.map = Map_UI(MAP_3)      
+                map = Map_ALGO(MAP_3)
                 self.map_size = self.map.map_size
-                self.agent.cell = self.map.get_agent_cell()
+                self.agent.current_cell = self.map.get_agent_cell()
+                self.agent.current_cell.visited = True
                 self.agent.map_size = self.map.map_size
+                self.solve(map.map, map.get_agent_cell())
                 self.state = "running"
             elif self.map4.isOver(pos):
-                self.map = Map_UI(MAP_4)
+                self.mapName = MAP_4
+                self.map = Map_UI(MAP_4)      
+                map = Map_ALGO(MAP_4)
                 self.map_size = self.map.map_size
-                self.agent.cell = self.map.get_agent_cell()
+                self.agent.current_cell = self.map.get_agent_cell()
+                self.agent.current_cell.visited = True
                 self.agent.map_size = self.map.map_size
+                self.solve(map.map, map.get_agent_cell())
                 self.state = "running"
             elif self.map5.isOver(pos):
-                self.map = Map_UI(MAP_5)
+                self.mapName = MAP_5
+                self.map = Map_UI(MAP_5)      
+                map = Map_ALGO(MAP_5)
                 self.map_size = self.map.map_size
-                self.agent.cell = self.map.get_agent_cell()
+                self.agent.current_cell = self.map.get_agent_cell()
+                self.agent.current_cell.visited = True
                 self.agent.map_size = self.map.map_size
+                self.solve(map.map, map.get_agent_cell())
                 self.state = "running"
             elif self.button_reset.isOver(pos):
                 self.is_reset == True
+                self.map == None
+                self.map_size = None
+                self.agent = Agent()
+                self.action_list = None
+                self.current_step = 0
+                if self.map:
+                    self.is_playing= False
+                    self.map = Map_UI(self.mapName)      
+                    map = Map_ALGO(self.mapName)
+                    self.map_size = self.map.map_size
+                    self.agent.current_cell = self.map.get_agent_cell()
+                    self.agent.current_cell.visited = True
+                    self.agent.map_size = self.map.map_size
+                    self.solve(map.map, map.get_agent_cell())
+                    self.state = "running"
+                    
             elif self.button_step.isOver(pos):
                 self.is_playing = False
                 self.is_step = True
@@ -374,7 +413,7 @@ class Game:
         elif noti_type == Noti.CLIMB_OUT_OF_THE_CAVE:
             text = self.font.render("CLIMB OUT OF THE CAVE !", True, (23, 127, 117))
             img = pygame.image.load(STENCH_IMG).convert_alpha()
-
+            
         # Show text Noti
         text_rect = text.get_rect()
         text_rect.center = (
@@ -441,3 +480,10 @@ class Game:
         pygame.time.delay(3000)
         self.state = "menu"
     
+    def reset(self, map):
+        self.map == None
+        self.map_size = None
+        self.agent = Agent()
+        self.action_list = None
+        self.current_step = 0
+                

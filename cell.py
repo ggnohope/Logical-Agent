@@ -119,10 +119,33 @@ class Cell_UI:
             # if the cell containing a arrow has any pit or Wumpus -> set this cell's VISITED = True
             self.visited = True
             self.attribute_imgs["arrow"] = None
+        elif self.attribute_imgs["arrow"] and self.visited:
+            if self.attribute_imgs["wumpus"]:
+                self.attribute_imgs["wumpus"] = pygame.transform.scale(
+                    self.attribute_imgs["wumpus"], (CELL_SIZE // 2, CELL_SIZE // 2)
+                )
+                screen.blit(
+                    self.attribute_imgs["wumpus"],
+                    (
+                        self.x * CELL_SIZE + CELL_SIZE // 3.4,
+                        self.y * CELL_SIZE + CELL_SIZE // 3.4,
+                    ),
+                )
+            self.attribute_imgs["arrow"] = pygame.transform.scale(
+                self.attribute_imgs["arrow"], (CELL_SIZE, CELL_SIZE)
+            )
+            screen.blit(
+                self.attribute_imgs["arrow"],
+                (
+                    self.x * CELL_SIZE,
+                    self.y * CELL_SIZE,
+                ),
+            )
+
+            # if the cell containing a arrow has any pit or Wumpus -> set this cell's VISITED = True
+            self.visited = True
+            self.attribute_imgs["arrow"] = None
         elif self.visited:
-            # pygame.draw.rect(
-            #     screen, pygame.Color(136, 56, 45), (x, y, CELL_SIZE, CELL_SIZE)
-            # )
             if self.attribute_imgs["wall"]:
                 self.attribute_imgs["wall"] = pygame.transform.scale(
                     self.attribute_imgs["wall"], (CELL_SIZE, CELL_SIZE)

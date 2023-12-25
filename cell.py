@@ -37,7 +37,41 @@ class Cell_UI:
                 self.attribute_imgs["pit"] = img
             elif c == "W":
                 img = pygame.image.load(WUMPUS_IMG).convert_alpha()
-                self.attribute_imgs["wumpus"] = img
+                self.img_list["obstacle"] = img
+            elif c == "S":
+                img = pygame.image.load(STENCH_IMG).convert_alpha()
+                self.img_list["stench"] = img
+            elif c == "B":
+                img = pygame.image.load(BREEZE_IMG).convert_alpha()
+                self.img_list["breeze"] = img
+
+    def valid_cell(self, x, y, grid_cells: list):
+        if not self.map_size:
+            self.map_size = int(math.sqrt(len(grid_cells)))
+        find_index = lambda x, y: x + y * self.map_size
+
+        if x < 0 or y < 0 or x > self.map_size - 1 or y > self.map_size - 1:
+            return False
+        return grid_cells[find_index(x, y)]
+
+    def get_neighbors(self, grid_cells: list):
+        neighbors = []
+
+        top = self.valid_cell(self.x, self.y - 1, grid_cells)
+        bottom = self.valid_cell(self.x, self.y + 1, grid_cells)
+        left = self.valid_cell(self.x - 1, self.y, grid_cells)
+        right = self.valid_cell(self.x + 1, self.y, grid_cells)
+
+        if top:
+            neighbors.append(top)
+        if bottom:
+            neighbors.append(bottom)
+        if left:
+            neighbors.append(left)
+        if right:
+            neighbors.append(right)
+
+        return neighbors
 
     def draw(self, screen):
         x, y = self.x * CELL_SIZE, self.y * CELL_SIZE

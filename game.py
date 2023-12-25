@@ -8,6 +8,9 @@ from const import *
 from map import Map
 from noti import Noti
 from buttons import *
+from action import *
+from agent_brain import *
+from test import action_list
 
 
 class Game:
@@ -26,6 +29,11 @@ class Game:
         self.state = "menu"
 
         self.agent = Agent()
+        
+        self.agent_brain = None
+        self.action_list = None
+
+        self.current_step = 0
         
         self.length_header = MAIN_BUTTON_LENGTH/3*2
         x_header = (CELL_SIZE*10 - 4*self.length_header) / 6
@@ -64,9 +72,9 @@ class Game:
                 
             if self.state == "running":
                 if self.is_playing == True:
-                    self.test_ui()
+                    self.show_result()
                 elif self.is_step == True:
-                    self.test_ui()
+                    self.show_result()
                     self.is_step = False
                 else: 
                     self.sketch_running_screen()
@@ -114,6 +122,12 @@ class Game:
         elif noti_type == Noti.SHOOT_ARROW:
             text = self.font.render("SHOOT ARROW !: -100", True, (23, 127, 117))
             img = pygame.image.load(ARROW_RIGHT_IMG).convert_alpha()
+        elif noti_type == Noti.PERCEIVE_BREEZE:
+            text = self.font.render("PERCEIVE BREEZE !", True, (23, 127, 117))
+            img = pygame.image.load(BREEZE_IMG).convert_alpha()
+        elif noti_type == Noti.PERCEIVE_STENCH:
+            text = self.font.render("PERCEIVE STENCH !", True, (23, 127, 117))
+            img = pygame.image.load(STENCH_IMG).convert_alpha()
 
         # Show text Noti
         text_rect = text.get_rect()
@@ -225,6 +239,145 @@ class Game:
                 self.agent.move_forward(self.map.grid_cells)
 
         pygame.time.delay(100)
+        
+    def show_result(self):
+        self.sketch_running_screen()
+
+        # return if finish the action`` list
+        if self.current_step == len(self.action_list):
+            if self.action_list[-1] == Action.CLIMB_OUT_OF_THE_CAVE.value:
+                self.state = "success"
+            else:
+                self.state = "failed"
+            return
+
+        # get action
+        action = self.action_list[self.current_step]
+        print(action)
+        # increase the step
+        if len(self.action_list) > self.current_step:
+            self.current_step += 1
+
+        if action == Action.TURN_LEFT.value:
+            self.agent.turn_left()
+        elif action == Action.TURN_RIGHT.value:
+            self.agent.turn_right()
+        elif action == Action.TURN_UP.value:
+            self.agent.turn_up()
+        elif action == Action.TURN_DOWN.value:
+            self.agent.turn_down()
+        elif action == Action.MOVE_FORWARD.value:
+            self.agent.move_forward(self.map.grid_cells)
+        elif action == Action.GRAB_GOLD.value:
+            self.sketch_running_screen(Noti.COLLECT_GOLD)
+            self.agent.collect_gold()
+        elif action == Action.PERCEIVE_BREEZE.value:
+            self.sketch_running_screen(Noti.PERCEIVE_BREEZE)
+        elif action == Action.PERCEIVE_STENCH.value:
+            self.sketch_running_screen(Noti.PERCEIVE_STENCH)
+        elif action == Action.SHOOT.value:
+            print("Shooting wumpus")
+            arrow_cell = self.agent.shoot_arrow(self.map.grid_cells)
+            self.sketch_running_screen(Noti.SHOOT_ARROW)
+            if "W" in arrow_cell.type:
+                # remove Wumpus
+                arrow_cell.type = arrow_cell.type.replace("W", "")
+                arrow_cell.img_list["obstacle"] = None
+                arrow_cell.visited = True
+                # remove stench in neighbor cells
+                adjacents = arrow_cell.get_neighbors(self.map.grid_cells)
+                for adjacent in adjacents:
+                    adjacent.img_list["stench"] = None
+                    adjacent.type = adjacent.type.replace("S", "")
+
+                self.sketch_running_screen(Noti.KILL_WUMPUS)
+        elif action == Action.KILL_WUMPUS.value:
+            print("Killing Wumpus")
+        elif action == Action.KILL_NO_WUMPUS.value:
+            print("Killing, but no Wumpus found")
+        elif action == Action.KILL_BY_WUMPUS.value:
+            print("Killed by Wumpus")
+        elif action == Action.KILL_BY_PIT.value:
+            print("Killed by Pit")
+        elif action == Action.CLIMB_OUT_OF_THE_CAVE.value:
+            print("Climbing out of the cave")
+        elif action == Action.DETECT_PIT.value:
+            pit_cell = self.agent_brain.action_cells[self.current_step - 1]
+            pit_x, pit_y = pit_cell.x, pit_cell.y
+            print("Detect pit at:", pit_x, pit_y)
+            pit_cell.visited = True
+        elif action == Action.DETECT_WUMPUS.value:
+            wumpus_cell = self.agent_brain.action_cells[self.current_step - 1]
+            wumpus_x, wumpus_y = wumpus_cell.x, wumpus_cell.y
+            print("Detect wumpus at:", wumpus_x, wumpus_y)
+            wumpus_cell.visited = True
+        elif action == Action.DETECT_NO_PIT.value:
+            pit_cell = self.agent_brain.action_cells[self.current_step - 1]
+            pit_x, pit_y = pit_cell.x, pit_cell.y
+            print("Detect no pit at:", pit_x, pit_y)
+        elif action == Action.DETECT_NO_WUMPUS.value:
+            wumpus_cell = self.agent_brain.action_cells[self.current_step - 1]
+            wumpus_x, wumpus_y = wumpus_cell.x, wumpus_cell.y
+            print("Detect no wumpus at:", wumpus_x, wumpus_y)
+        elif action == Action.INFER_PIT.value:
+            print("Inferring pit")
+        elif action == Action.INFER_WUMPUS.value:
+            print("Inferring Wumpus")
+        elif action == Action.REMOVE_KNOWLEDGE_RELATED_TO_WUMPUS.value:
+            print("Remove knowledge related to killed wumpus")
+        elif action == Action.SHOOT_RANDOMLY.value:
+            print("Start shooting randomly")
+        elif action == Action.FAIL_TO_INFER.value:
+            infer_cell = self.agent_brain.action_cells[self.current_step - 1]
+            infer_cell_x, infer_cell_y = infer_cell.x, infer_cell.y
+            print("Fail to infer cell:", infer_cell_x, infer_cell_y)
+        elif action == Action.FAIL_TO_ESCAPE.value:
+            print("Agent fail to find way out")
+        else:
+            print("Unknown action")
+        
+        self.sketch_running_screen()
+        delay_time = 100
+        if self.map.file_name == MAP_5:
+            delay_time = 50
+        pygame.time.delay(delay_time)
+
+    def solve(self):
+        agent_cell = self.agent.cell
+        self.agent_brain = AgentBrain(self.agent.cell, self.map.grid_cells)
+        self.agent_brain.action_list = action_list
+        self.action_list = action_list
+        # if agent is at the exit, just climb out
+        if self.agent.cell.x == 0 and self.agent.cell.y == self.agent.cell.map_size - 1:
+            self.action_list.append(Action.TURN_DOWN)
+            self.action_list.append(Action.CLIMB_OUT_OF_THE_CAVE)
+        else:
+            # find the exit cell
+            exit_cell = None
+            for cell in self.map.grid_cells:
+                if cell.x == 0 and cell.y == cell.map_size - 1:
+                    exit_cell = cell
+
+            # find way out for agent
+            if exit_cell.visited:
+                for cell in self.map.grid_cells:
+                    cell.visited = False
+                self.agent_brain.action_list = []
+                self.agent_brain.find_exit()
+                # self.action_list.extend(self.agent_brain.action_list)
+                # self.action_list.append(Action.TURN_DOWN)
+                # self.action_list.append(Action.CLIMB_OUT_OF_THE_CAVE)
+            # if exit cell has not been visited before => can not go to exit cell
+            # else:
+                # self.action_list.append(Action.FAIL_TO_ESCAPE)
+
+        # reset the visited list to render in UI later
+        for cell in self.map.grid_cells:
+            cell.visited = False
+        agent_cell.visited = True
+        
+        # print(f'ACTION LIST: {self.action_list}')
+        # self.state = "show_result"
 
     def sketch_map_select(self):
         self.screen.fill(pygame.Color('White'))
@@ -310,6 +463,9 @@ class Game:
                 self.map_size = self.map.map_size
                 self.agent.cell = self.map.get_agent_cell()
                 self.agent.map_size = self.map.map_size
+                self.solve()
+                # print(self.action_list)
+                print(Action.TURN_LEFT.value)
                 self.state = "running"
             elif self.map2.isOver(pos):
                 self.map = Map(MAP_2)

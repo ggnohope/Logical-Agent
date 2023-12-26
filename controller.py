@@ -262,7 +262,7 @@ import pygame
 pygame.init()
 pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
-map = Map_ALGO(MAP_1)
+map = Map_ALGO(MAP_3)
 agent = Agent()
 
 agent.current_cell = map.get_agent_cell()

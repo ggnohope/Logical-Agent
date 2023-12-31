@@ -2,6 +2,9 @@
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 800
 
+SAFE_NOTI = "./assets/images/check.png"
+FAIL_INFER_NOTI = "./assets/images/close.png"
+
 # Title
 TITLE = "Wumpus World"
 

@@ -57,7 +57,7 @@ class Controller:
         for neighbor in neighbors:
             is_delete_stench = True
             neighbors_of_neighbor = self.get_neighbors(neighbor)
-            if self.current_cell in neighbors_of_neighbor:
+            if cell in neighbors_of_neighbor:
                 neighbors_of_neighbor.remove(cell)
             for cell in neighbors_of_neighbor:
                 if cell.attributes["wumpus"] == True:
@@ -73,9 +73,9 @@ class Controller:
                 self.indicate_turn(self.current_cell, neighbor)
                 temp_kb = self.kb.get_clauses()
                 temp_kb.append([(-1) * (PIT + neighbor.get_converted_pos())])
-                solver = Solver(temp_kb)
-                if solver.is_satisfiable() == False:
-                    neighbor.infered = True
+                solver = SATSolver(temp_kb)
+                # if solver.is_satisfiable() == False:
+                if solver.solve() == False:
                     self.action_list.append(DETECT_PIT)
                     self.kb.add_clause([PIT + neighbor.get_converted_pos()])
                     if neighbor not in remove_list:
@@ -83,9 +83,9 @@ class Controller:
                 else:
                     temp_kb = self.kb.get_clauses()
                     temp_kb.append([PIT + neighbor.get_converted_pos()])
-                    solver = Solver(temp_kb)
-                    if solver.is_satisfiable() == False:
-                        neighbor.infered = True
+                    solver = SATSolver(temp_kb)
+                    # if solver.is_satisfiable() == False:
+                    if solver.solve() == False:
                         self.action_list.append(DETECT_NO_PIT)
                         self.kb.add_clause([(-1) * (PIT + neighbor.get_converted_pos())])
                     else:
@@ -98,8 +98,9 @@ class Controller:
                 self.indicate_turn(self.current_cell, neighbor)
                 temp_kb = self.kb.get_clauses()
                 temp_kb.append([(WUMPUS + neighbor.get_converted_pos()) * (-1)])
-                solver = Solver(temp_kb)
-                if solver.is_satisfiable() == False:
+                solver = SATSolver(temp_kb)
+                # if solver.is_satisfiable() == False:
+                if solver.solve() == False:
                     self.action_list.append(DETECT_WUMPUS)
                     self.action_list.append(SHOOT_ARROW)
                     self.action_list.append(KILL_WUMPUS)
@@ -109,16 +110,16 @@ class Controller:
 
                     #update knowledge base
                     symbol = WUMPUS + neighbor.get_converted_pos()
-                    self.kb.clauses = [clause for clause in self.kb.clauses if symbol not in clause or -symbol not in clause]
+                    self.kb.clauses = [clause for clause in self.kb.clauses if symbol not in clause and symbol * (-1) not in clause ]
 
                     # wumpus and pit can not be the same cell
                     self.kb.add_clause([(PIT + neighbor.get_converted_pos()) * (-1)])
                 else:
                     temp_kb = self.kb.get_clauses()
                     temp_kb.append([WUMPUS + neighbor.get_converted_pos()])
-                    solver = Solver(temp_kb)
-                    if solver.is_satisfiable() == False:
-                        neighbor.infered = True
+                    solver = SATSolver(temp_kb)
+                    # if solver.is_satisfiable() == False:
+                    if solver.solve() == False:
                         self.action_list.append(DETECT_NO_WUMPUS)
                         self.kb.add_clause([(WUMPUS + neighbor.get_converted_pos()) * (-1)])
                     else: # cant infer whether this neighbor cell has wumpus or not, we dont move to this cell
@@ -137,6 +138,7 @@ class Controller:
         return neighbors
 
     def explore_world(self):
+        self.current_cell.visited = True
         if self.current_cell.attributes["pit"] == True:
             self.action_list.append(KILLED_BY_PIT)
             return False
@@ -183,8 +185,6 @@ class Controller:
             if neighbor == self.current_cell.parent:
                 remove_list.append(neighbor)
             elif neighbor.visited == True:
-                remove_list.append(neighbor)
-            elif neighbor.infered == True:
                 remove_list.append(neighbor)
         
         for cell in remove_list:
@@ -257,18 +257,3 @@ class Controller:
                 neighbor.parent = current_cell
         
         return False
-
-import pygame
-pygame.init()
-pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-
-map = Map_ALGO(MAP_3)
-agent = Agent()
-
-agent.current_cell = map.get_agent_cell()
-agent.current_cell.visited = True
-controller = Controller(map.map, agent.current_cell)
-if controller.explore_world():
-    if controller.find_exit():
-        controller.action_list.append(ESCAPE_SUCCESS)
-print(controller.action_list)

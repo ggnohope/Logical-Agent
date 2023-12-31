@@ -52,11 +52,11 @@ class Agent:
         self.score -= 10
 
     def turn_up(self):
-        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_DOWN_IMG).convert_alpha()
+        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_UP_IMG).convert_alpha()
         self.direction = TURN_UP
 
     def turn_down(self):
-        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_UP_IMG).convert_alpha()
+        self.current_cell.attribute_imgs["agent"] = pygame.image.load(AGENT_DOWN_IMG).convert_alpha()
         self.direction = TURN_DOWN
 
     def turn_left(self):
@@ -71,12 +71,12 @@ class Agent:
         if self.direction == TURN_DOWN:
             arrow_cell = self.current_cell.valid_cell(self.current_cell.x, self.current_cell.y - 1, grid_cells)
             arrow_cell.attribute_imgs["arrow"] = pygame.image.load(
-                ARROW_UP_IMG
+                ARROW_DOWN_IMG
             ).convert_alpha()
         elif self.direction == TURN_UP:
             arrow_cell = self.current_cell.valid_cell(self.current_cell.x, self.current_cell.y + 1, grid_cells)
             arrow_cell.attribute_imgs["arrow"] = pygame.image.load(
-                ARROW_DOWN_IMG
+                ARROW_UP_IMG
             ).convert_alpha()
         elif self.direction == TURN_LEFT:
             arrow_cell = self.current_cell.valid_cell(self.current_cell.x - 1, self.current_cell.y, grid_cells)

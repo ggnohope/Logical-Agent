@@ -1,20 +1,10 @@
-import random
 import sys
-
 import pygame
-
 from agent import *
 from const import *
 from map import *
-from noti import Noti
 from buttons import *
-from action import *
-# from test import action_list
-
 from controller import *
-# controller = Controller(map.map, agent.current_cell)
-# controller.explore_world()
-# print(controller.action_list)
 
 class Game:
     def __init__(self) -> None:
@@ -30,11 +20,12 @@ class Game:
         self.mapName = 0
         self.map_size = None
 
+        self.score = 0
+
         self.state = "menu"
 
         self.agent = Agent()
         
-        self.agent_brain = None
         self.action_list = None
 
         self.current_step = 0
@@ -62,7 +53,6 @@ class Game:
         self.map5 = Buttons(self, WHITE, x_map , posy_map[4], MAIN_BUTTON_LENGTH, MAIN_BUTTON_HEIGHT, 'Map 5')
         
     def run(self):
-        # self.sketch_main_screen()
         self.sketch_main_screen()
         while True:
             self.sketch_layout()
@@ -97,132 +87,111 @@ class Game:
             self.event_mouse_motion(event, pos)
             self.event_mouse_click(event, pos)
 
-    def sketch_running_screen(self, noti_type: Noti = None):
-        # Draw filter
+    def sketch_running_screen(self, noti_type = None):
         pygame.draw.rect(self.screen, pygame.Color('White'), (CELL_SIZE*12, CELL_SIZE*2, WINDOW_WIDTH - CELL_SIZE*12, WINDOW_HEIGHT/4))
 
-        # draw score and gold collected
         self.sketch_score()
         self.sketch_gold()
         
         self.map.draw(self.screen)
         
-        # draw Noti
         if noti_type:
             self.sketch_noti(noti_type)
 
         pygame.display.update()
-        # pygame.time.delay(1000)
         
     def show_result(self):
         self.sketch_running_screen()
 
-        # return if finish the action`` list
         if self.current_step == len(self.action_list):
             if self.action_list[-1] == ESCAPE_SUCCESS:
                 self.state = "success"
-                self.reset(None)
             else:
                 self.state = "failed"
-                self.reset(None)
             return
 
         i = self.agent.current_cell.get_converted_pos()
-        if self.agent.direction == TURN_UP and i-10 > 0:
-                cell_ahead = self.map.map[i-10]
-        elif self.agent.direction == TURN_LEFT and i-1 > 0:
+        if self.agent.direction == TURN_UP and i - 10 > 0:
+            cell_ahead = self.map.map[i-10]
+        elif self.agent.direction == TURN_LEFT and i > 0 and ((i - 1) // 10) == (i // 10):
             cell_ahead = self.map.map[i-1]
-        elif self.agent.direction == TURN_DOWN and i+10 < 100:
+        elif self.agent.direction == TURN_DOWN and i + 10 < 100:
             cell_ahead = self.map.map[i+10]
-        elif self.agent.direction == TURN_RIGHT and i+1 < 100:
+        elif self.agent.direction == TURN_RIGHT and i < 100 and ((i + 1) // 10) == (i // 10):
             cell_ahead = self.map.map[i+1]
                 
-        # get action
         action = self.action_list[self.current_step]
-        action2 = None
-        if(self.current_step + 1 < len(self.action_list)):
-            action2 = self.action_list[self.current_step+1]
             
-        # increase the step
-        if len(self.action_list) > self.current_step:
+        if self.current_step < len(self.action_list):
             self.current_step += 1
 
-        # print(action)
-        if action == Action.TURN_LEFT.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
+        if action == TURN_LEFT:
             self.agent.turn_left()
-        elif action == Action.TURN_RIGHT.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
+        elif action == TURN_RIGHT:
             self.agent.turn_right()
-        elif action == Action.TURN_UP.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
+        elif action == TURN_UP:
             self.agent.turn_up()
-        elif action == Action.TURN_DOWN.value and not action2 == Action.FAIL_TO_INFER_PIT.value:
+        elif action == TURN_DOWN:
             self.agent.turn_down()
-        elif action == Action.MOVE_FORWARD.value:
+        elif action == MOVE_FORWARD:
             self.agent.move_forward(self.map)
-        elif action == Action.COLLECT_GOLD.value:
-            self.sketch_running_screen(Noti.COLLECT_GOLD)
+        elif action == COLLECT_GOLD:
+            self.sketch_running_screen(COLLECT_GOLD)
             self.agent.collect_gold()
-        elif action == Action.PERCEIVE_BREEZE.value:
-            self.sketch_running_screen(Noti.PERCEIVE_BREEZE)
-        elif action == Action.PERCEIVE_STENCH.value:
-            self.sketch_running_screen(Noti.PERCEIVE_STENCH)
-        elif action == Action.SHOOT.value:
+        elif action == PERCEIVE_BREEZE:
+            self.sketch_running_screen(PERCEIVE_BREEZE)
+        elif action == PERCEIVE_STENCH:
+            self.sketch_running_screen(PERCEIVE_STENCH)
+        elif action == SHOOT_ARROW:
             arrow_cell = self.agent.shoot_arrow(self.map.map)
-            self.sketch_running_screen(Noti.SHOOT_ARROW)
+            self.sketch_running_screen(SHOOT_ARROW)
             arrow_cell.content = arrow_cell.content.replace("W", "")
             arrow_cell.attribute_imgs["wumpus"] = None
             arrow_cell.visited = True
-            adjacents = arrow_cell.get_neighbors(self.map.map)
+            adjacents = self.map.get_neighbors(arrow_cell)
             for adjacent in adjacents:
-                adjacent.attribute_imgs["stench"] = None
-                adjacent.content = adjacent.content.replace('S', '')
-        elif action == Action.KILL_WUMPUS.value:
-            self.sketch_running_screen(Noti.KILL_WUMPUS)
-        elif action == Action.KILL_NO_WUMPUS.value:
-            self.sketch_running_screen(Noti.KILL_NO_WUMPUS)
-        elif action == Action.KILL_BY_WUMPUS.value:
-            self.sketch_running_screen(Noti.KILL_BY_WUMPUS)
-        elif action == Action.KILL_BY_PIT.value:
-            self.sketch_running_screen(Noti.KILL_BY_PIT)
-        elif action == Action.CLIMB_OUT_OF_THE_CAVE.value:
-            self.sketch_running_screen(Noti.CLIMB_OUT_OF_THE_CAVE)
-        elif action == Action.DETECT_PIT.value:
+                is_delete_stench = True
+                adjacents_of_adjacent = self.map.get_neighbors(adjacent)
+                if arrow_cell in adjacents_of_adjacent:
+                    adjacents_of_adjacent.remove(arrow_cell)
+                for cell in adjacents_of_adjacent:
+                    if cell.attribute_imgs["wumpus"] != None:
+                        is_delete_stench = False
+                        break
+                if is_delete_stench:
+                    adjacent.attribute_imgs["stench"] = None
+                    adjacent.content = adjacent.content.replace('S', '')
+        elif action == KILL_WUMPUS:
+            self.sketch_running_screen(KILL_WUMPUS)
+        elif action == KILLED_BY_WUMPUS:
+            self.sketch_running_screen(KILLED_BY_WUMPUS)
+        elif action == KILLED_BY_PIT:
+            self.sketch_running_screen(KILLED_BY_PIT)
+        elif action == DETECT_PIT:
             cell_ahead.visited = True
-            self.sketch_running_screen(Noti.DETECT_PIT)
-        elif action == Action.DETECT_WUMPUS.value:
-            print('Detect wumpus')
+            self.sketch_running_screen(DETECT_PIT)
+        elif action == DETECT_WUMPUS:
             cell_ahead.visited = True
-            self.sketch_running_screen(Noti.DETECT_WUMPUS)
-        elif action == Action.DETECT_NO_PIT.value:
+            self.sketch_running_screen(DETECT_WUMPUS)
+        elif action == DETECT_NO_PIT:
             cell_ahead.visited = True
-        elif action == Action.DETECT_NO_WUMPUS.value:
+            self.sketch_running_screen(DETECT_NO_PIT)
+        elif action == DETECT_NO_WUMPUS:
             cell_ahead.visited = True
-        elif action == Action.INFER_PIT.value:
-            self.sketch_running_screen(Noti.INFER_PIT)
-        elif action == Action.INFER_WUMPUS.value:
-            self.sketch_running_screen(Noti.INFER_WUMPUS)
-        elif action == Action.REMOVE_KNOWLEDGE_RELATED_TO_WUMPUS.value:
-            print("Remove knowledge related to killed wumpus")
-        elif action == Action.SHOOT_RANDOMLY.value:
-            print("Start shooting randomly")
-        elif action == Action.FAIL_TO_INFER_PIT.value:
-            # infer_cell = self.agent_brain.action_cells[self.current_step - 1]
-            # infer_cell_x, infer_cell_y = infer_cell.x, infer_cell.y
-            print("Fail to infer cell:")
-            # self.sketch_running_screen(Noti.FAIL_TO_INFER_PIT)
-        elif action == Action.FAIL_TO_ESCAPE.value:
-            print("Agent fail to find way out")
-        else:
-            print("Unknown action")
+            self.sketch_running_screen(DETECT_NO_WUMPUS)
+        elif action == FAIL_TO_INFER_PIT:
+            self.sketch_running_screen(FAIL_TO_INFER_PIT)
+        elif action == FAIL_TO_INFER_WUMPUS:
+            self.sketch_running_screen(FAIL_TO_INFER_WUMPUS)
         
         self.sketch_running_screen()
-        delay_time = 30
-        # if self.map.file_name == MAP_5:
-        #     delay_time = 50
+        delay_time = 200
         pygame.time.delay(delay_time)
 
     def solve(self, map, agent_current_cell):
         controller = Controller(map, agent_current_cell)
         if controller.explore_world():
+            print(controller.action_list)
             if controller.find_exit():
                 controller.action_list.append(ESCAPE_SUCCESS)
         self.action_list = controller.action_list
@@ -385,43 +354,53 @@ class Game:
                 self.is_playing = False 
                 self.is_step = False    
     
-    def sketch_noti(self, noti_type: Noti):
-        if noti_type == Noti.KILL_WUMPUS:
+    def sketch_noti(self, noti_type):
+        if noti_type == KILL_WUMPUS:
             text = self.font.render("KILL WUMPUS !", True, (23, 127, 117))
             img = pygame.image.load(WUMPUS_IMG).convert_alpha()
-        elif noti_type == Noti.DETECT_PIT:
+        elif noti_type == DETECT_PIT:
             text = self.font.render("DETECT PIT !", True, (23, 127, 117))
             img = pygame.image.load(PIT_IMG).convert_alpha()
-        elif noti_type == Noti.COLLECT_GOLD:
+        elif noti_type == DETECT_NO_PIT:
+            text = self.font.render("NO PIT !", True, (23, 127, 117))
+            img = pygame.image.load(SAFE_NOTI).convert_alpha()
+        elif noti_type == DETECT_NO_WUMPUS:
+            text = self.font.render("NO WUMPUS !", True, (23, 127, 117))
+            img = pygame.image.load(SAFE_NOTI).convert_alpha()
+        elif noti_type == FAIL_TO_INFER_PIT:
+            text = self.font.render("FAIL TO INFER PIT !", True, (23, 127, 117))
+            img = pygame.image.load(FAIL_INFER_NOTI).convert_alpha()
+        elif noti_type == COLLECT_GOLD:
             text = self.font.render("COLLECT GOLD !: +1000", True, (23, 127, 117))
             img = pygame.image.load(CHEST_IMG).convert_alpha()
-        elif noti_type == Noti.SHOOT_ARROW:
+        elif noti_type == SHOOT_ARROW:
             text = self.font.render("SHOOT ARROW !: -100", True, (23, 127, 117))
             img = pygame.image.load(ARROW_RIGHT_IMG).convert_alpha()
-        elif noti_type == Noti.PERCEIVE_BREEZE:
+        elif noti_type == PERCEIVE_BREEZE:
             text = self.font.render("PERCEIVE BREEZE !", True, (23, 127, 117))
             img = pygame.image.load(BREEZE_IMG).convert_alpha()
-        elif noti_type == Noti.PERCEIVE_STENCH:
+        elif noti_type == PERCEIVE_STENCH:
             text = self.font.render("PERCEIVE STENCH !", True, (23, 127, 117))
             img = pygame.image.load(STENCH_IMG).convert_alpha()
-        elif noti_type == Noti.DETECT_WUMPUS:
+        elif noti_type == DETECT_WUMPUS:
             text = self.font.render("DETECT WUMPUS !", True, (23, 127, 117))
             img = pygame.image.load(WUMPUS_IMG).convert_alpha()
-        elif noti_type == Noti.KILL_BY_PIT:
+        elif noti_type == FAIL_TO_INFER_WUMPUS:
+            text = self.font.render("FAIL TO INFER WUMPUS !", True, (23, 127, 117))
+            img = pygame.image.load(FAIL_INFER_NOTI).convert_alpha()
+        elif noti_type == KILLED_BY_PIT:
             text = self.font.render("KILLED BY PIT !", True, (217, 30, 24))
             img = pygame.image.load(PIT).convert_alpha()
-        elif noti_type == Noti.CLIMB_OUT_OF_THE_CAVE:
+        elif noti_type == ESCAPE_SUCCESS:
             text = self.font.render("CLIMB OUT OF THE CAVE !", True, (23, 127, 117))
             img = pygame.image.load(STENCH_IMG).convert_alpha()
             
-        # Show text Noti
         text_rect = text.get_rect()
         text_rect.center = (
             WINDOW_WIDTH // 2 + CELL_SIZE * 6,
             WINDOW_HEIGHT // 3.5,
         )
         self.screen.blit(text, text_rect)
-        # Show image
         img = pygame.transform.scale(img, (CELL_SIZE, CELL_SIZE))
         self.screen.blit(
             img,
@@ -431,7 +410,7 @@ class Game:
             ),
         )
         pygame.display.update()
-        pygame.time.delay(1000)
+        pygame.time.delay(1500)
 
     def sketch_success_screen(self):
         for event in pygame.event.get():
@@ -455,6 +434,7 @@ class Game:
 
         pygame.display.update()
         pygame.time.delay(3000)
+        self.reset()
         self.state = "menu"
 
     def sketch_failed_screen(self):
@@ -478,9 +458,10 @@ class Game:
 
         pygame.display.update()
         pygame.time.delay(3000)
+        self.reset()
         self.state = "menu"
     
-    def reset(self, map):
+    def reset(self):
         self.map == None
         self.map_size = None
         self.agent = Agent()

@@ -5,6 +5,7 @@ from const import *
 from map import *
 from buttons import *
 from controller import *
+import os
 
 class Game:
     def __init__(self) -> None:
@@ -17,7 +18,8 @@ class Game:
         self.font_title = pygame.font.Font(FONT_STYLE, 30)
 
         self.map = None
-        self.mapName = 0
+        self.map_path = None
+        self.map_name = None
         self.map_size = None
 
         self.score = 0
@@ -108,6 +110,7 @@ class Game:
                 self.state = "success"
             else:
                 self.state = "failed"
+            self.save_result(self.map_name, self.agent.score, self.action_list)
             return
 
         i = self.agent.current_cell.get_converted_pos()
@@ -185,16 +188,30 @@ class Game:
             self.sketch_running_screen(FAIL_TO_INFER_WUMPUS)
         
         self.sketch_running_screen()
-        delay_time = 200
-        pygame.time.delay(delay_time)
+        pygame.time.delay(200)
 
     def solve(self, map, agent_current_cell):
         controller = Controller(map, agent_current_cell)
         if controller.explore_world():
-            print(controller.action_list)
             if controller.find_exit():
                 controller.action_list.append(ESCAPE_SUCCESS)
+            else:
+                controller.action_list.append(FAIL_TO_ESCAPE)
+
         self.action_list = controller.action_list
+
+    def save_result(self, file_name, score, list):
+        if not os.path.exists("outputs"):
+            os.makedirs("outputs")
+
+        file_path = os.path.join("outputs", file_name)
+
+        with open(file_path, 'w') as file:
+            file.write(str(score))
+            file.write('\n')
+
+            for item in list:
+                file.write(str(item) + '\n')
 
     def sketch_map_select(self):
         self.screen.fill(pygame.Color('White'))
@@ -276,7 +293,8 @@ class Game:
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.map1.colour, self.map2.colour, self.map3.colour, self.map4.colour, self.map5.colour, self.button_reset.colour,self.button_step.colour,self.button_play.colour, self.button_pause.colour = WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE
             if self.map1.isOver(pos):
-                self.mapName = MAP_1
+                self.map_path = MAP_1
+                self.map_name = "result1.txt"
                 self.map = Map_UI(MAP_1)      
                 map = Map_ALGO(MAP_1)
                 self.map_size = self.map.map_size
@@ -287,7 +305,8 @@ class Game:
                 self.state = "running"
                 
             elif self.map2.isOver(pos):
-                self.mapName = MAP_2
+                self.map_path = MAP_2
+                self.map_name = "result2.txt"
                 self.map = Map_UI(MAP_2)      
                 map = Map_ALGO(MAP_2)
                 self.map_size = self.map.map_size
@@ -297,7 +316,8 @@ class Game:
                 self.solve(map.map, map.get_agent_cell())
                 self.state = "running"
             elif self.map3.isOver(pos):
-                self.mapName = MAP_3
+                self.map_path = MAP_3
+                self.map_name = "result3.txt"
                 self.map = Map_UI(MAP_3)      
                 map = Map_ALGO(MAP_3)
                 self.map_size = self.map.map_size
@@ -307,7 +327,8 @@ class Game:
                 self.solve(map.map, map.get_agent_cell())
                 self.state = "running"
             elif self.map4.isOver(pos):
-                self.mapName = MAP_4
+                self.map_path = MAP_4
+                self.map_name = "result4.txt"
                 self.map = Map_UI(MAP_4)      
                 map = Map_ALGO(MAP_4)
                 self.map_size = self.map.map_size
@@ -317,7 +338,8 @@ class Game:
                 self.solve(map.map, map.get_agent_cell())
                 self.state = "running"
             elif self.map5.isOver(pos):
-                self.mapName = MAP_5
+                self.map_path = MAP_5
+                self.map_name = "result5.txt"
                 self.map = Map_UI(MAP_5)      
                 map = Map_ALGO(MAP_5)
                 self.map_size = self.map.map_size
@@ -335,8 +357,8 @@ class Game:
                 self.current_step = 0
                 if self.map:
                     self.is_playing= False
-                    self.map = Map_UI(self.mapName)      
-                    map = Map_ALGO(self.mapName)
+                    self.map = Map_UI(self.map_path)      
+                    map = Map_ALGO(self.map_path)
                     self.map_size = self.map.map_size
                     self.agent.current_cell = self.map.get_agent_cell()
                     self.agent.current_cell.visited = True
@@ -410,7 +432,7 @@ class Game:
             ),
         )
         pygame.display.update()
-        pygame.time.delay(1500)
+        pygame.time.delay(200)
 
     def sketch_success_screen(self):
         for event in pygame.event.get():
@@ -464,6 +486,8 @@ class Game:
     def reset(self):
         self.map == None
         self.map_size = None
+        self.map_path = None
+        self.map_name = None
         self.agent = Agent()
         self.action_list = None
         self.current_step = 0

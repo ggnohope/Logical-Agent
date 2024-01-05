@@ -122,7 +122,7 @@ class Map_ALGO:
 
     def infer_cell_attribute(self):
         for cell in self.map:
-            cell.init_attribute_imgs()
+            cell.init_attributes()
 
         for cell in self.map:
             neighbors = self.get_neighbors(cell)

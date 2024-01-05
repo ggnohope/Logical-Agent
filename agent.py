@@ -98,3 +98,6 @@ class Agent:
         self.current_cell.attribute_imgs["gold"] = None
         self.gold += 1
         self.score += 1000
+
+    def climb_out_cave(self):
+        self.score += 10

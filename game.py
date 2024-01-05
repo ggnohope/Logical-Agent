@@ -107,6 +107,7 @@ class Game:
 
         if self.current_step == len(self.action_list):
             if self.action_list[-1] == ESCAPE_SUCCESS:
+                self.agent.climb_out_cave()
                 self.state = "success"
             else:
                 self.state = "failed"
@@ -432,7 +433,7 @@ class Game:
             ),
         )
         pygame.display.update()
-        pygame.time.delay(200)
+        pygame.time.delay(1500)
 
     def sketch_success_screen(self):
         for event in pygame.event.get():

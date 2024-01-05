@@ -216,7 +216,7 @@ class Cell_ALGO:
     def get_converted_pos(self):
         return (self.x - 1) + 10 * (10 - self.y)
 
-    def init_attribute_imgs(self):
+    def init_attributes(self):
         if self.content == "-":
             return
         for c in self.content:

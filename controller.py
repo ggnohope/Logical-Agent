@@ -73,8 +73,8 @@ class Controller:
                 self.indicate_turn(self.current_cell, neighbor)
                 temp_kb = self.kb.get_clauses()
                 temp_kb.append([(-1) * (PIT + neighbor.get_converted_pos())])
-                solver = SATSolver(temp_kb)
-                if solver.solve() == False:
+                solver = Solver(temp_kb)
+                if solver.is_satisfiable() == False:
                     self.action_list.append(DETECT_PIT)
                     self.kb.add_clause([PIT + neighbor.get_converted_pos()])
                     if neighbor not in remove_list:
@@ -82,8 +82,8 @@ class Controller:
                 else:
                     temp_kb = self.kb.get_clauses()
                     temp_kb.append([PIT + neighbor.get_converted_pos()])
-                    solver = SATSolver(temp_kb)
-                    if solver.solve() == False:
+                    solver = Solver(temp_kb)
+                    if solver.is_satisfiable() == False:
                         self.action_list.append(DETECT_NO_PIT)
                         self.kb.add_clause([(-1) * (PIT + neighbor.get_converted_pos())])
                     else:
@@ -96,8 +96,8 @@ class Controller:
                 self.indicate_turn(self.current_cell, neighbor)
                 temp_kb = self.kb.get_clauses()
                 temp_kb.append([(WUMPUS + neighbor.get_converted_pos()) * (-1)])
-                solver = SATSolver(temp_kb)
-                if solver.solve() == False:
+                solver = Solver(temp_kb)
+                if solver.is_satisfiable() == False:
                     self.action_list.append(DETECT_WUMPUS)
                     self.action_list.append(SHOOT_ARROW)
                     self.action_list.append(KILL_WUMPUS)
@@ -114,8 +114,8 @@ class Controller:
                 else:
                     temp_kb = self.kb.get_clauses()
                     temp_kb.append([WUMPUS + neighbor.get_converted_pos()])
-                    solver = SATSolver(temp_kb)
-                    if solver.solve() == False:
+                    solver = Solver(temp_kb)
+                    if solver.is_satisfiable() == False:
                         self.action_list.append(DETECT_NO_WUMPUS)
                         self.kb.add_clause([(WUMPUS + neighbor.get_converted_pos()) * (-1)])
                     else: # cant infer whether this neighbor cell has wumpus or not, we dont move to this cell

@@ -94,8 +94,6 @@ class SATSolver:
     def simplify_cnf(self, literal):
         self.clauses = [clause for clause in self.clauses if literal not in clause]
         self.clauses = [[lit for lit in clause if lit != -literal] for clause in self.clauses]
-
-    def undo_simplify_cnf(self):
         pass
 
     def choose_literal(self, assignment):
